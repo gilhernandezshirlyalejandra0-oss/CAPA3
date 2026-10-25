@@ -43,3 +43,9 @@ La solución estará enfocada principalmente en la prevención y orientación de
 ## 7. Estado del proyecto
 
 El proyecto se encuentra en la fase de organización y planificación de actividades mediante GitHub Projects. Las tareas se distribuyen por tipo, prioridad, épica, puntos estimados y sprint para facilitar el seguimiento del desarrollo.
+
+Roles del Equipo (Sprint 1)
+
+*   *Product Owner (PO):* Shirly Gil - Encargada de definir la visión del producto y priorizar las historias de usuario.
+*   *Scrum Master:* NicolI Navarro - Encargada de la gestión del repositorio, subida de archivos y organización del tablero.
+*   *UX/UI y Desarrollo:* Carlos Martínez - Encargado del diseño de la interfaz (accesibilidad) y la futura programación en Flutter.
