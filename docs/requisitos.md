@@ -14,7 +14,7 @@
 
 *Cambio en la app que surgió de esto:* Decidimos que la pantalla de inicio (HU-01) debe tener un botón gigante que diga "Pedir ayuda a familiar" (HU-05), para que Don José no tenga que buscar la app de WhatsApp ni escribir, sino que con un toque se envíe la alerta.
 
-## 3. Criterios de Accesibilidad y UX/UI (Liderado por Carlos)
+## 3. Criterios de Accesibilidad y UX/UI 
 Para garantizar que Don José pueda usar la aplicación sin frustraciones, se definieron las siguientes reglas de diseño:
 - *Tamaño de toque:* Todos los botones principales deben medir mínimo *48x48 dp* (el estándar de accesibilidad de Google), evitando toques accidentales.
 - *Tipografía:* El texto debe tener un tamaño mínimo de *24 sp* y usar fuentes sin serifas (como Roboto) para facilitar la lectura.
