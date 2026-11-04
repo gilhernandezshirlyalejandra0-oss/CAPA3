@@ -228,3 +228,4 @@ class DetalleAlertaScreen extends StatelessWidget {
     );
   }
 }
+ 
