@@ -46,6 +46,6 @@ El proyecto se encuentra en la fase de organización y planificación de activid
 
 Roles del Equipo (Sprint 1)
 
-*   *Product Owner (PO):* Shirly Gil - Encargada de definir la visión del producto y priorizar las historias de usuario.
+*   *Product Owner (PO):* Carlos Martínez - Encargada de definir la visión del producto y priorizar las historias de usuario.
 *   *Scrum Master:* NicolI Navarro - Encargada de la gestión del repositorio, subida de archivos y organización del tablero.
-*   *UX/UI y Desarrollo:* Carlos Martínez - Encargado del diseño de la interfaz (accesibilidad) y la futura programación en Flutter.
+*   *UX/UI y Desarrollo:* Alejandra Gil - Encargado del diseño de la interfaz (accesibilidad) y la futura programación en Flutter.
