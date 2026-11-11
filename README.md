@@ -4,7 +4,7 @@
 
 Aplicación educativa, accesible y fácil de usar, que enseña a los **adultos mayores** a reconocer el phishing y otros engaños digitales que llegan por **SMS, WhatsApp y correo electrónico**. Incluye **narración por voz** para que el usuario pueda escuchar cada contenido sin depender únicamente de la lectura.
 
-> Proyecto académico — Instituto Universitario de la Paz (IUPAZ), Escuela de Ciencias de Ingeniería Informática. Desarrollado con metodología Scrum.
+> Proyecto académico — Instituto Universitario de la Paz (UNIPAZ), Escuela de Ciencias de Ingeniería Informática. Desarrollado con metodología Scrum.
 
 ##  Visión
 
