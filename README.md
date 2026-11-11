@@ -14,14 +14,14 @@ Contribuir a que los adultos mayores naveguen con mayor confianza y autonomía, 
 
 | Módulo | Descripción |
 |---|---|
-| 🏠 Inicio y bienvenida hablada | Saludo, voz de bienvenida y 4 accesos grandes. Si la voz no está disponible, la app avisa y sigue funcionando con botones. |
-| 📘 Aprende sobre el phishing | Lecciones desplegables (qué es, cómo llegan, señales de alerta) con lectura en voz alta. |
-| 💬 Reconoce los engaños | Ejemplos reales de SMS, WhatsApp y correo, con las señales que delatan el engaño. |
-| ❓ Pon a prueba lo aprendido | Cuestionario de 5 preguntas con retroalimentación inmediata y barra de progreso. |
-| 🔐 Consejos de seguridad | Tarjetas con recomendaciones del día a día (contraseñas, mensajes inesperados, etc.). |
-| 🔊 Control de voz | Activar/desactivar narración y ajustar velocidad. |
-| 📈 Mi progreso | Lecciones vistas y último resultado del cuestionario, guardados en el dispositivo. |
-| 👓 Accesibilidad visual | Tamaño de texto ajustable y modo de alto contraste. |
+|  Inicio y bienvenida hablada | Saludo, voz de bienvenida y 4 accesos grandes. Si la voz no está disponible, la app avisa y sigue funcionando con botones. |
+|  Aprende sobre el phishing | Lecciones desplegables (qué es, cómo llegan, señales de alerta) con lectura en voz alta. |
+|  Reconoce los engaños | Ejemplos reales de SMS, WhatsApp y correo, con las señales que delatan el engaño. |
+|  Pon a prueba lo aprendido | Cuestionario de 5 preguntas con retroalimentación inmediata y barra de progreso. |
+|  Consejos de seguridad | Tarjetas con recomendaciones del día a día (contraseñas, mensajes inesperados, etc.). |
+|  Control de voz | Activar/desactivar narración y ajustar velocidad. |
+|  Mi progreso | Lecciones vistas y último resultado del cuestionario, guardados en el dispositivo. |
+|  Accesibilidad visual | Tamaño de texto ajustable y modo de alto contraste. |
 
 ##  Fuera del alcance
 
