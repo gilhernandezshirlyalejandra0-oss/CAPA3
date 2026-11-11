@@ -5,6 +5,9 @@ class AlertaSeguridad {
     required this.tipo,
     required this.nivelRiesgo,
     required this.descripcion,
+    required this.mensajeEjemplo,
+    required this.senales,
+    required this.recomendacion,
   });
 
   final int id;
@@ -12,4 +15,7 @@ class AlertaSeguridad {
   final String tipo;
   final String nivelRiesgo;
   final String descripcion;
+  final String mensajeEjemplo;
+  final List<String> senales;
+  final String recomendacion;
 }

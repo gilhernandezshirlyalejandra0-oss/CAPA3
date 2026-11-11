@@ -6,24 +6,24 @@ class OpcionesRepository {
   List<OpcionMenu> obtenerOpciones() {
     return const [
       OpcionMenu(
-        icono: Icons.link,
-        titulo: 'Revisar un enlace',
-        descripcion: 'Comprueba si un enlace puede ser sospechoso.',
+        icono: Icons.menu_book_rounded,
+        titulo: 'Aprende sobre el phishing',
+        descripcion: 'Conoce qué es el phishing y cómo pueden engañarte.',
       ),
       OpcionMenu(
-        icono: Icons.message_outlined,
-        titulo: 'Analizar un mensaje',
-        descripcion: 'Identifica señales de posibles engaños.',
+        icono: Icons.mark_chat_unread_rounded,
+        titulo: 'Reconoce los engaños',
+        descripcion: 'Aprende a identificar engaños con ejemplos cotidianos.',
       ),
       OpcionMenu(
-        icono: Icons.school_outlined,
-        titulo: 'Aprender sobre seguridad',
-        descripcion: 'Aprende a protegerte de las estafas digitales.',
+        icono: Icons.quiz_rounded,
+        titulo: 'Pon a prueba lo aprendido',
+        descripcion: 'Practica con preguntas y actividades educativas.',
       ),
       OpcionMenu(
-        icono: Icons.shield_outlined,
-        titulo: 'Consultar un riesgo',
-        descripcion: 'Conoce señales de alerta para navegar con cuidado.',
+        icono: Icons.shield_rounded,
+        titulo: 'Consejos de seguridad',
+        descripcion: 'Descubre cómo cuidar tus datos y cuentas personales.',
       ),
     ];
   }
