@@ -1,4 +1,4 @@
-# 🛡️ Fortaleza Cibernética
+#  Fortaleza Cibernética
 
 **Educación para una vida digital segura.**
 
@@ -6,11 +6,11 @@ Aplicación educativa, accesible y fácil de usar, que enseña a los **adultos m
 
 > Proyecto académico — Instituto Universitario de la Paz (IUPAZ), Escuela de Ciencias de Ingeniería Informática. Desarrollado con metodología Scrum.
 
-## 🎯 Visión
+##  Visión
 
 Contribuir a que los adultos mayores naveguen con mayor confianza y autonomía, aprendiendo a identificar mensajes engañosos mediante lecciones cortas, ejemplos cotidianos, práctica y consejos claros, todo con voz narrada y diseño de alto contraste.
 
-## ✨ Funcionalidades
+##  Funcionalidades
 
 | Módulo | Descripción |
 |---|---|
@@ -23,7 +23,7 @@ Contribuir a que los adultos mayores naveguen con mayor confianza y autonomía, 
 | 📈 Mi progreso | Lecciones vistas y último resultado del cuestionario, guardados en el dispositivo. |
 | 👓 Accesibilidad visual | Tamaño de texto ajustable y modo de alto contraste. |
 
-## 🚫 Fuera del alcance
+##  Fuera del alcance
 
 - Detectar automáticamente enlaces o mensajes fraudulentos ni garantizar protección total.
 - Eliminar mensajes de WhatsApp, SMS o correo.
@@ -32,14 +32,14 @@ Contribuir a que los adultos mayores naveguen con mayor confianza y autonomía, 
 
 La app **educa y orienta**; no reemplaza el criterio del usuario.
 
-## 🌍 Objetivos de Desarrollo Sostenible
+##  Objetivos de Desarrollo Sostenible
 
 - **ODS 16** Paz, justicia e instituciones sólidas: protección frente al fraude.
 - **ODS 3** Salud y bienestar: menos estrés y riesgos emocionales por estafas.
 - **ODS 10** Reducción de las desigualdades: acceso inclusivo y seguro a lo digital.
 - **ODS 4** Educación de calidad: aprendizaje continuo para todas las edades.
 
-## 👥 Equipo
+##  Equipo
 
 | Integrante | Rol Scrum | Responsabilidad técnica |
 |---|---|---|
@@ -47,11 +47,11 @@ La app **educa y orienta**; no reemplaza el criterio del usuario.
 | Nicoll Navarro | Scrum Master | Diseño UX/UI y Control de Calidad (QA), gestión del repositorio y tablero |
 | Alejandra Gil | Equipo de desarrollo | Desarrollo Frontend en Flutter |
 
-## 🧱 Tecnologías
+##  Tecnologías
 
 Flutter (Dart) · Patrón MVVM · `flutter_tts` (voz) · `shared_preferences` (progreso local) · GitHub Projects (Scrum).
 
-## 📁 Estructura del repositorio
+##  Estructura del repositorio
 
 ```
 CAPA3/
@@ -62,7 +62,7 @@ CAPA3/
 ```
 Detalle completo en [`docs/06-estructura-del-proyecto.md`](docs/06-estructura-del-proyecto.md).
 
-## 🚀 Ejecutar la app
+##  Ejecutar la app
 
 ```bash
 cd aplicacion_flutter
@@ -71,7 +71,7 @@ flutter run -d chrome      # navegador
 flutter run                # dispositivo Android conectado
 ```
 
-## 📚 Documentación
+##  Documentación
 
 1. [Visión y alcance](docs/01-vision-y-alcance.md)
 2. [Roles y metodología](docs/02-roles-y-metodologia.md)
@@ -84,6 +84,6 @@ flutter run                # dispositivo Android conectado
 9. [Manual técnico](docs/09-manual-tecnico.md)
 10. [Contenido educativo](docs/10-contenido-educativo.md)
 
-## 📊 Estado
+##  Estado
 
 Backlog reorganizado en GitHub Projects por tipo, prioridad, épica, puntos y sprint. Sprint 1 y Sprint 2 corresponden a lo ya implementado en la versión web actual (inicio, lecciones, ejemplos, cuestionario y consejos).
