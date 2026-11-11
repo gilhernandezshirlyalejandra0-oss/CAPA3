@@ -1,6 +1,5 @@
 # 10. Contenido educativo
 
-> Propuesta de contenido. Ajustar para que coincida con los textos que ya tiene la app.
 
 ## Lecciones (Aprende sobre el phishing)
 1. **¿Qué es el phishing?** Un engaño que busca que entregues información privada como contraseñas, datos bancarios o códigos. Los estafadores se hacen pasar por personas o empresas conocidas.
