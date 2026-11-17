@@ -1,13 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_tts/flutter_tts.dart';
+import '../services/voz_humana.dart';
+import '../theme/paleta.dart';
+import '../services/asistente.dart';
+import '../widgets/avatar_parlante.dart';
+import '../widgets/escena_animada.dart';
+import '../widgets/fondos_dibujados.dart';
 
-const Color fondoCrema = Color(0xFFFAF8F5);
-const Color textoCarbon = Color(0xFF2C3539);
-const Color verdeSalvia = Color(0xFF2A6F4E);
-const Color verdeSuave = Color(0xFFE9F5EE);
-const Color terracota = Color(0xFFD96B43);
-const Color terracotaSuave = Color(0xFFFDF0EA);
-const Color amarilloCalido = Color(0xFFFFF6E5);
+const Color fondoCrema = Paleta.crema;
+const Color textoCarbon = Paleta.tinta;
+const Color verdeSalvia = Paleta.aqua;
+const Color verdeSuave = Paleta.aquaSuave;
+const Color terracota = Paleta.papaya;
+const Color terracotaSuave = Paleta.papayaSuave;
+const Color amarilloCalido = Paleta.mostazaSuave;
 
 class ConsejosSeguridadScreen extends StatefulWidget {
   const ConsejosSeguridadScreen({super.key});
@@ -18,7 +23,7 @@ class ConsejosSeguridadScreen extends StatefulWidget {
 }
 
 class _ConsejosSeguridadScreenState extends State<ConsejosSeguridadScreen> {
-  final FlutterTts _tts = FlutterTts();
+  final AdaptadorVoz _tts = VozHumana.adaptador();
   int? _consejoActivo;
 
   static const List<_ReglaDeOro> _reglas = [
@@ -124,6 +129,7 @@ class _ConsejosSeguridadScreenState extends State<ConsejosSeguridadScreen> {
   @override
   void dispose() {
     _tts.stop();
+    _tts.dispose();
     super.dispose();
   }
 
@@ -135,64 +141,58 @@ class _ConsejosSeguridadScreenState extends State<ConsejosSeguridadScreen> {
         backgroundColor: fondoCrema,
         foregroundColor: textoCarbon,
         elevation: 0,
-        title: const Text(
-          'Tus 6 Reglas de Oro',
-          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 22),
-        ),
+        scrolledUnderElevation: 0,
+        title: Text('Tus 6 reglas de oro', style: Letras.titulo(size: 26)),
         actions: [
-          TextButton.icon(
+          IconButton(
+            tooltip: 'Escuchar todas',
             onPressed: _escucharResumenCompleto,
             icon: Icon(
-              _consejoActivo == -1
-                  ? Icons.stop_circle_rounded
-                  : Icons.volume_up_rounded,
+              _consejoActivo == -1 ? Icons.stop_circle_rounded : Icons.volume_up_rounded,
               color: verdeSalvia,
-              size: 28,
-            ),
-            label: const Text(
-              'Escuchar todas',
-              style: TextStyle(
-                color: verdeSalvia,
-                fontWeight: FontWeight.w800,
-                fontSize: 16,
-              ),
+              size: 32,
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 6),
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        padding: const EdgeInsets.fromLTRB(18, 4, 18, 32),
         children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: amarilloCalido,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: const Color(0xFFE5CFA3), width: 1.5),
-            ),
-            child: const Row(
+          ValueListenableBuilder<Personaje>(
+            valueListenable: Asistente.actual,
+            builder: (context, guia, _) => Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Icon(Icons.touch_app_rounded, color: terracota, size: 38),
-                SizedBox(width: 14),
+                Container(
+                  clipBehavior: Clip.antiAlias,
+                  decoration: BoxDecoration(color: guia.fondo, shape: BoxShape.circle),
+                  child: AvatarParlante(personaje: guia, tamano: 90, saludando: true),
+                ),
+                const SizedBox(width: 10),
                 Expanded(
-                  child: Text(
-                    'Toca cualquier tarjeta para que Don Prudencio te la lea en voz alta.',
-                    style: TextStyle(
-                      fontSize: 18,
-                      height: 1.35,
-                      fontWeight: FontWeight.w700,
-                      color: textoCarbon,
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: amarilloCalido,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Paleta.mostaza, width: 2),
+                    ),
+                    child: Text(
+                      'Toca cualquier tarjeta y ${guia.nombre} te la lee en voz alta.',
+                      style: const TextStyle(fontSize: 19, height: 1.35, fontWeight: FontWeight.w800, color: textoCarbon),
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 20),
           for (int i = 0; i < _reglas.length; i++)
             _TarjetaRegla(
               regla: _reglas[i],
+              escena: _escenasReglas[i % _escenasReglas.length],
+              color: Paleta.vivos[i % 4],
               activa: _consejoActivo == i,
               onTap: () => _escucharRegla(i),
             ),
@@ -202,126 +202,144 @@ class _ConsejosSeguridadScreenState extends State<ConsejosSeguridadScreen> {
   }
 }
 
+/// Una escena dibujada para cada regla.
+const List<Escena> _escenasReglas = [
+  Escena(imagen: 'regla_1.png', lugar: Lugar.casa, personaje: Asistente.valentina,
+      expresion: Expresion.sorprendida, objeto: Icons.dialpad_rounded, globo: '¡No!'),
+  Escena(imagen: 'regla_2.png', lugar: Lugar.sala, personaje: Asistente.hernando,
+      objeto: Icons.call_end_rounded, globo: '¡Chao!'),
+  Escena(imagen: 'regla_3.png', lugar: Lugar.casa, personaje: Asistente.andres,
+      expresion: Expresion.preocupada, objeto: Icons.link_off_rounded, globo: '!'),
+  Escena(imagen: 'regla_4.png', lugar: Lugar.sala, personaje: Asistente.carmen,
+      acompanante: Asistente.andres, objeto: Icons.phone_rounded),
+  Escena(imagen: 'regla_5.png', lugar: Lugar.casa, personaje: Asistente.gloria,
+      objeto: Icons.menu_book_rounded, globo: '1234 no'),
+  Escena(imagen: 'regla_6.png', lugar: Lugar.casa, personaje: Asistente.ruben,
+      objeto: Icons.coffee_rounded, globo: 'Calma'),
+];
+
 class _TarjetaRegla extends StatelessWidget {
   const _TarjetaRegla({
     required this.regla,
+    required this.escena,
+    required this.color,
     required this.activa,
     required this.onTap,
   });
 
   final _ReglaDeOro regla;
+  final Escena escena;
+  final Color color;
   final bool activa;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final textoSobreColor = color == Paleta.mostaza ? Paleta.tinta : Colors.white;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
-      child: Material(
-        color: activa ? verdeSuave : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(24),
-          onTap: onTap,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color: activa ? verdeSalvia : const Color(0xFFE4DFD7),
-                width: activa ? 2.5 : 1.5,
+      padding: const EdgeInsets.only(bottom: 22),
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(26),
+            border: Border.all(color: Paleta.ciruela, width: 3),
+            boxShadow: [
+              BoxShadow(color: activa ? color : Paleta.ciruela, offset: const Offset(6, 6)),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Stack(
+                children: [
+                  SizedBox(
+                    height: 180,
+                    width: double.infinity,
+                    child: EscenaAnimada(escena: escena, habla: activa),
+                  ),
+                  // Número grande de la regla
+                  Positioned(
+                    left: 12,
+                    top: 12,
+                    child: Container(
+                      width: 56,
+                      height: 56,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: color,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Paleta.ciruela, width: 3),
+                      ),
+                      child: Text(regla.numero, style: Letras.titulo(size: 30, color: textoSobreColor)),
+                    ),
+                  ),
+                ],
               ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+              Container(
+                width: double.infinity,
+                color: color,
+                padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+                child: Row(
                   children: [
-                    CircleAvatar(
-                      radius: 26,
-                      backgroundColor: activa ? verdeSalvia : terracotaSuave,
-                      child: Icon(
-                        regla.icono,
-                        color: activa ? Colors.white : terracota,
-                        size: 28,
+                    Icon(regla.icono, color: textoSobreColor, size: 30),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        regla.titulo,
+                        style: Letras.titulo(size: 22, color: textoSobreColor, height: 1.15),
                       ),
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
+                    Icon(
+                      activa ? Icons.stop_circle_rounded : Icons.volume_up_rounded,
+                      color: textoSobreColor,
+                      size: 34,
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      regla.descripcion,
+                      style: const TextStyle(fontSize: 21, height: 1.45, color: textoCarbon),
+                    ),
+                    const SizedBox(height: 14),
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'REGLA ${regla.numero}',
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w900,
-                              color: verdeSalvia,
-                              letterSpacing: 1.0,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            regla.titulo,
-                            style: const TextStyle(
-                              fontSize: 21,
-                              fontWeight: FontWeight.w900,
-                              color: textoCarbon,
+                          const Icon(Icons.lightbulb_rounded, color: Paleta.papaya, size: 28),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              regla.ejemplo,
+                              style: const TextStyle(
+                                fontSize: 19,
+                                fontWeight: FontWeight.w800,
+                                color: textoCarbon,
+                                height: 1.35,
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
-                    Icon(
-                      activa
-                          ? Icons.stop_circle_rounded
-                          : Icons.volume_up_rounded,
-                      color: activa ? terracota : verdeSalvia,
-                      size: 32,
-                    ),
                   ],
                 ),
-                const SizedBox(height: 14),
-                Text(
-                  regla.descripcion,
-                  style: const TextStyle(
-                    fontSize: 19,
-                    height: 1.45,
-                    color: textoCarbon,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: activa ? Colors.white : const Color(0xFFF7F4EE),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.verified_rounded,
-                        color: verdeSalvia,
-                        size: 24,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          regla.ejemplo,
-                          style: const TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w700,
-                            color: textoCarbon,
-                            height: 1.35,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

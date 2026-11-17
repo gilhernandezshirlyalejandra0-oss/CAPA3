@@ -1,13 +1,45 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_tts/flutter_tts.dart';
+import 'dart:math' as math;
 
-const Color fondoCrema = Color(0xFFFAF8F5);
-const Color textoCarbon = Color(0xFF2C3539);
-const Color verdeSalvia = Color(0xFF2A6F4E);
-const Color verdeSuave = Color(0xFFE9F5EE);
-const Color terracota = Color(0xFFD96B43);
-const Color terracotaSuave = Color(0xFFFDF0EA);
-const Color amarilloCalido = Color(0xFFFFF6E5);
+import 'package:flutter/material.dart';
+
+import '../services/asistente.dart';
+import '../services/voz_humana.dart';
+import '../theme/paleta.dart';
+import '../widgets/avatar_parlante.dart';
+import '../widgets/escena_animada.dart';
+import '../widgets/fondos_dibujados.dart';
+
+const Color fondoCrema = Paleta.crema;
+const Color textoCarbon = Paleta.tinta;
+const Color verdeSalvia = Paleta.aqua;
+const Color verdeSuave = Paleta.aquaSuave;
+const Color terracota = Paleta.papaya;
+const Color terracotaSuave = Paleta.papayaSuave;
+const Color amarilloCalido = Paleta.mostazaSuave;
+
+/// La escena que ilustra cada caso del juego.
+const List<Escena> _escenasJuego = [
+  Escena(imagen: 'juego_1.png', lugar: Lugar.sala, personaje: Asistente.mercedes,
+      objeto: Icons.card_giftcard_rounded, globo: '?'),
+  Escena(imagen: 'juego_2.png', lugar: Lugar.oficina, personaje: Asistente.hernando,
+      objeto: Icons.phone_in_talk_rounded, globo: '?'),
+  Escena(imagen: 'juego_3.png', lugar: Lugar.casa, personaje: Asistente.carmen,
+      acompanante: Asistente.estafadorVecina, objeto: Icons.chat_rounded, globo: '?'),
+  Escena(imagen: 'juego_4.png', lugar: Lugar.calle, personaje: Asistente.ruben,
+      objeto: Icons.local_shipping_rounded, globo: '?'),
+];
+
+/// Misma escena, pero el personaje reacciona a la respuesta.
+Escena _reaccion(Escena e, bool acerto) => Escena(
+      imagen: e.imagen,
+      lugar: e.lugar,
+      personaje: e.personaje,
+      acompanante: e.acompanante,
+      objeto: acerto ? Icons.verified_user_rounded : Icons.warning_rounded,
+      expresion: acerto ? Expresion.feliz : Expresion.preocupada,
+      globo: acerto ? '¡Bien!' : '¡Uy!',
+      saludando: acerto,
+    );
 
 class CuestionarioScreen extends StatefulWidget {
   const CuestionarioScreen({super.key});
@@ -17,7 +49,7 @@ class CuestionarioScreen extends StatefulWidget {
 }
 
 class _CuestionarioScreenState extends State<CuestionarioScreen> {
-  final FlutterTts _tts = FlutterTts();
+  final AdaptadorVoz _tts = VozHumana.adaptador();
 
   int _preguntaActual = 0;
   int _puntaje = 0;
@@ -83,18 +115,6 @@ class _CuestionarioScreenState extends State<CuestionarioScreen> {
     ),
   ];
 
-  @override
-  void initState() {
-    super.initState();
-    _configurarVoz();
-  }
-
-  Future<void> _configurarVoz() async {
-    await _tts.setLanguage('es-CO');
-    await _tts.setSpeechRate(0.42);
-    await _tts.setPitch(0.98);
-  }
-
   Future<void> _leerPreguntaActual() async {
     final p = _preguntas[_preguntaActual];
     await _tts.stop();
@@ -114,9 +134,7 @@ class _CuestionarioScreenState extends State<CuestionarioScreen> {
 
     setState(() {
       _respuestaSeleccionada = indice;
-      if (esCorrecta) {
-        _puntaje++;
-      }
+      if (esCorrecta) _puntaje++;
     });
 
     _tts.stop();
@@ -131,9 +149,7 @@ class _CuestionarioScreenState extends State<CuestionarioScreen> {
       });
       _leerPreguntaActual();
     } else {
-      setState(() {
-        _finalizado = true;
-      });
+      setState(() => _finalizado = true);
       _tts.stop();
       _tts.speak(
         '¡Felicitaciones! Terminaste la práctica con $_puntaje de ${_preguntas.length} aciertos. '
@@ -155,6 +171,7 @@ class _CuestionarioScreenState extends State<CuestionarioScreen> {
   @override
   void dispose() {
     _tts.stop();
+    _tts.dispose();
     super.dispose();
   }
 
@@ -166,325 +183,408 @@ class _CuestionarioScreenState extends State<CuestionarioScreen> {
         backgroundColor: fondoCrema,
         foregroundColor: textoCarbon,
         elevation: 0,
-        title: const Text(
-          '¿Qué harías tú?',
-          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 22),
-        ),
+        scrolledUnderElevation: 0,
+        title: Text('¿Qué harías tú?', style: Letras.titulo(size: 26)),
         actions: [
-          if (!_finalizado)
-            TextButton.icon(
-              onPressed: _leerPreguntaActual,
-              icon: const Icon(Icons.volume_up_rounded, color: verdeSalvia, size: 28),
-              label: const Text(
-                'Escuchar caso',
-                style: TextStyle(
-                  color: verdeSalvia,
-                  fontWeight: FontWeight.w800,
-                  fontSize: 16,
-                ),
-              ),
+          // Estrellas ganadas
+          Padding(
+            padding: const EdgeInsets.only(right: 14),
+            child: Row(
+              children: [
+                for (var i = 0; i < _preguntas.length; i++)
+                  AnimatedScale(
+                    scale: i < _puntaje ? 1.15 : 0.9,
+                    duration: const Duration(milliseconds: 500),
+                    curve: Curves.elasticOut,
+                    child: Icon(
+                      Icons.star_rounded,
+                      size: 30,
+                      color: i < _puntaje ? Paleta.mostaza : Paleta.arena,
+                    ),
+                  ),
+              ],
             ),
-          const SizedBox(width: 8),
+          ),
         ],
       ),
-      body: _finalizado ? _pantallaResultado() : _pantallaPregunta(),
+      body: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 450),
+        child: _finalizado
+            ? KeyedSubtree(key: const ValueKey('fin'), child: _pantallaResultado())
+            : KeyedSubtree(key: ValueKey('p$_preguntaActual'), child: _pantallaPregunta()),
+      ),
     );
   }
 
   Widget _pantallaPregunta() {
     final p = _preguntas[_preguntaActual];
-    final letras = ['A', 'B', 'C'];
+    const letras = ['A', 'B', 'C'];
+    final respondio = _respuestaSeleccionada != null;
+    final acerto = _respuestaSeleccionada == p.correcta;
+    final base = _escenasJuego[_preguntaActual % _escenasJuego.length];
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+    return Stack(
       children: [
-        Row(
-          children: List.generate(_preguntas.length, (i) {
-            final activo = i <= _preguntaActual;
-            return Expanded(
-              child: Container(
-                height: 8,
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                decoration: BoxDecoration(
-                  color: activo ? verdeSalvia : const Color(0xFFDAD4C8),
-                  borderRadius: BorderRadius.circular(10),
-                ),
+        ListView(
+          padding: const EdgeInsets.fromLTRB(18, 4, 18, 32),
+          children: [
+            // Escena del caso (el personaje reacciona a tu respuesta)
+            Container(
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: Paleta.ciruela, width: 3),
+                boxShadow: const [BoxShadow(color: Paleta.ciruela, offset: Offset(5, 5))],
               ),
-            );
-          }),
-        ),
-        const SizedBox(height: 18),
-        Container(
-          padding: const EdgeInsets.all(22),
-          decoration: BoxDecoration(
-            color: amarilloCalido,
-            borderRadius: BorderRadius.circular(26),
-            border: Border.all(color: const Color(0xFFE5CFA3), width: 2),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+              child: Column(
                 children: [
-                  const CircleAvatar(
-                    radius: 22,
-                    backgroundColor: Colors.white,
-                    child: Icon(Icons.record_voice_over_rounded, color: terracota, size: 26),
+                  SizedBox(
+                    height: 190,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 400),
+                      child: EscenaAnimada(
+                        key: ValueKey('$_preguntaActual-$respondio'),
+                        escena: respondio ? _reaccion(base, acerto) : base,
+                        habla: true,
+                      ),
+                    ),
                   ),
-                  const SizedBox(width: 10),
-                  Text(
-                    'CASO ${_preguntaActual + 1} DE ${_preguntas.length}',
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w900,
-                      color: terracota,
-                      letterSpacing: 0.8,
+                  Container(
+                    width: double.infinity,
+                    color: Paleta.mostaza,
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                    child: Text(
+                      'CASO ${_preguntaActual + 1} DE ${_preguntas.length}',
+                      style: Letras.titulo(size: 17, letterSpacing: 1),
+                    ),
+                  ),
+                  Container(
+                    width: double.infinity,
+                    color: Colors.white,
+                    padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
+                    child: Text(
+                      p.situacion,
+                      style: const TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.w800,
+                        color: textoCarbon,
+                        height: 1.4,
+                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
-              Text(
-                p.situacion,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: textoCarbon,
-                  height: 1.4,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 20),
-        const Text(
-          'Toca la respuesta que creas correcta:',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: textoCarbon,
-          ),
-        ),
-        const SizedBox(height: 12),
-        ...List.generate(p.opciones.length, (indice) {
-          final seleccionada = _respuestaSeleccionada == indice;
-          final mostrarResultado = _respuestaSeleccionada != null;
-          final esLaCorrecta = indice == p.correcta;
-
-          Color colorFondo = Colors.white;
-          Color colorBorde = const Color(0xFFE0DAD0);
-          Color colorCirculo = terracotaSuave;
-          Color colorLetra = terracota;
-
-          if (mostrarResultado && esLaCorrecta) {
-            colorFondo = verdeSuave;
-            colorBorde = verdeSalvia;
-            colorCirculo = verdeSalvia;
-            colorLetra = Colors.white;
-          } else if (seleccionada && !esLaCorrecta) {
-            colorFondo = terracotaSuave;
-            colorBorde = terracota;
-            colorCirculo = terracota;
-            colorLetra = Colors.white;
-          }
-
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 14),
-            child: Material(
-              color: colorFondo,
-              borderRadius: BorderRadius.circular(20),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(20),
-                onTap: _respuestaSeleccionada == null
-                    ? () => _seleccionarRespuesta(indice)
-                    : null,
-                child: Container(
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: colorBorde, width: 2),
-                  ),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 22,
-                        backgroundColor: colorCirculo,
-                        child: mostrarResultado && esLaCorrecta
-                            ? const Icon(Icons.check_rounded, color: Colors.white, size: 26)
-                            : Text(
-                                letras[indice],
-                                style: TextStyle(
-                                  color: colorLetra,
-                                  fontSize: 19,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Text(
-                          p.opciones[indice],
-                          style: const TextStyle(
-                            fontSize: 19,
-                            fontWeight: FontWeight.w600,
-                            color: textoCarbon,
-                            height: 1.35,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
             ),
-          );
-        }),
-        if (_respuestaSeleccionada != null) ...[
-          const SizedBox(height: 6),
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: _respuestaSeleccionada == p.correcta ? verdeSuave : terracotaSuave,
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(
-                color: _respuestaSeleccionada == p.correcta ? verdeSalvia : terracota,
-                width: 2,
-              ),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(height: 18),
+            Row(
               children: [
-                Icon(
-                  _respuestaSeleccionada == p.correcta
-                      ? Icons.verified_rounded
-                      : Icons.info_rounded,
-                  color: _respuestaSeleccionada == p.correcta ? verdeSalvia : terracota,
-                  size: 32,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    _respuestaSeleccionada == p.correcta
-                        ? p.explicacionAcierto
-                        : p.explicacionFallo,
-                    style: const TextStyle(
-                      fontSize: 19,
-                      height: 1.45,
-                      fontWeight: FontWeight.w700,
-                      color: textoCarbon,
-                    ),
+                Expanded(child: Text('Toca tu respuesta:', style: Letras.titulo(size: 22))),
+                TextButton.icon(
+                  onPressed: _leerPreguntaActual,
+                  icon: const Icon(Icons.volume_up_rounded, color: verdeSalvia, size: 28),
+                  label: const Text(
+                    'Escuchar',
+                    style: TextStyle(color: verdeSalvia, fontWeight: FontWeight.w900, fontSize: 18),
                   ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 18),
-          SizedBox(
-            height: 60,
-            child: FilledButton.icon(
-              onPressed: _siguientePregunta,
-              icon: const Icon(Icons.arrow_forward_rounded, size: 28),
-              label: Text(
-                _preguntaActual == _preguntas.length - 1
-                    ? 'Ver cómo me fue'
-                    : 'Siguiente caso',
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+            const SizedBox(height: 8),
+            ...List.generate(p.opciones.length, (indice) {
+              final seleccionada = _respuestaSeleccionada == indice;
+              final esLaCorrecta = indice == p.correcta;
+
+              Color fondo = Colors.white;
+              Color borde = Paleta.ciruela;
+              Color colorCirculo = Paleta.vivos[indice % 4];
+              Widget circulo = Text(letras[indice], style: Letras.titulo(size: 24, color: Colors.white));
+
+              if (respondio && esLaCorrecta) {
+                fondo = verdeSuave;
+                borde = verdeSalvia;
+                colorCirculo = verdeSalvia;
+                circulo = const Icon(Icons.check_rounded, color: Colors.white, size: 30);
+              } else if (seleccionada && !esLaCorrecta) {
+                fondo = terracotaSuave;
+                borde = terracota;
+                colorCirculo = terracota;
+                circulo = const Icon(Icons.close_rounded, color: Colors.white, size: 30);
+              }
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: AnimatedScale(
+                  scale: seleccionada ? 1.03 : 1,
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeOutBack,
+                  child: Material(
+                    color: fondo,
+                    borderRadius: BorderRadius.circular(22),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(22),
+                      onTap: respondio ? null : () => _seleccionarRespuesta(indice),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 300),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(22),
+                          border: Border.all(color: borde, width: 3),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 52,
+                              height: 52,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                color: colorCirculo,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Paleta.ciruela, width: 2),
+                              ),
+                              child: circulo,
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Text(
+                                p.opciones[indice],
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                  color: textoCarbon,
+                                  height: 1.35,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }),
+            if (respondio) ...[
+              const SizedBox(height: 4),
+              _BurbujaGuia(
+                texto: acerto ? p.explicacionAcierto : p.explicacionFallo,
+                acerto: acerto,
               ),
-              style: FilledButton.styleFrom(
-                backgroundColor: verdeSalvia,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
+              const SizedBox(height: 18),
+              SizedBox(
+                height: 64,
+                child: FilledButton.icon(
+                  onPressed: _siguientePregunta,
+                  icon: const Icon(Icons.arrow_forward_rounded, size: 28),
+                  label: Text(
+                    _preguntaActual == _preguntas.length - 1 ? 'Ver cómo me fue' : 'Siguiente caso',
+                    style: Letras.titulo(size: 22, color: Colors.white),
+                  ),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Paleta.papaya,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  ),
                 ),
               ),
-            ),
-          ),
-        ],
+            ],
+          ],
+        ),
+        if (respondio && acerto) const Positioned.fill(child: IgnorePointer(child: _Confeti())),
       ],
     );
   }
 
   Widget _pantallaResultado() {
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(26),
-        child: Container(
-          padding: const EdgeInsets.all(28),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: const Color(0xFFE0DAD0), width: 2),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 96,
-                height: 96,
-                decoration: const BoxDecoration(
-                  color: verdeSuave,
-                  shape: BoxShape.circle,
+    final todos = _puntaje == _preguntas.length;
+    return Stack(
+      children: [
+        Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(22),
+            child: ValueListenableBuilder<Personaje>(
+              valueListenable: Asistente.actual,
+              builder: (context, guia, _) => Container(
+                clipBehavior: Clip.antiAlias,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(28),
+                  border: Border.all(color: Paleta.ciruela, width: 3),
+                  boxShadow: const [BoxShadow(color: Paleta.ciruela, offset: Offset(6, 6))],
                 ),
-                child: const Icon(
-                  Icons.workspace_premium_rounded,
-                  color: verdeSalvia,
-                  size: 58,
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                '¡Muy bien hecho!',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 30,
-                  fontWeight: FontWeight.w900,
-                  color: textoCarbon,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Acertaste $_puntaje de ${_preguntas.length} casos',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 22,
-                  color: verdeSalvia,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Ya sabes cómo actuar con calma cuando llegue un mensaje o llamada sospechosa a tu celular.',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 19,
-                  height: 1.45,
-                  color: textoCarbon,
-                ),
-              ),
-              const SizedBox(height: 28),
-              SizedBox(
-                width: double.infinity,
-                height: 60,
-                child: FilledButton.icon(
-                  onPressed: _reiniciar,
-                  icon: const Icon(Icons.replay_rounded, size: 28),
-                  label: const Text(
-                    'Volver a practicar',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
-                  ),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: verdeSalvia,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(18),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      height: 200,
+                      child: EscenaAnimada(
+                        escena: Escena(
+                          imagen: 'juego_final.png',
+                          lugar: Lugar.sala,
+                          personaje: guia,
+                          objeto: Icons.workspace_premium_rounded,
+                          globo: todos ? '¡Wow!' : '¡Bien!',
+                          saludando: true,
+                        ),
+                        habla: true,
+                      ),
                     ),
-                  ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(22, 18, 22, 24),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              for (var i = 0; i < _preguntas.length; i++)
+                                Icon(
+                                  Icons.star_rounded,
+                                  size: 46,
+                                  color: i < _puntaje ? Paleta.mostaza : Paleta.arena,
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            todos ? '¡Perfecto!' : '¡Muy bien hecho!',
+                            textAlign: TextAlign.center,
+                            style: Letras.titulo(size: 34),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Acertaste $_puntaje de ${_preguntas.length} casos',
+                            textAlign: TextAlign.center,
+                            style: Letras.titulo(size: 22, color: Paleta.aqua),
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Ya sabes cómo actuar con calma cuando llegue un mensaje o llamada sospechosa a tu celular.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 20, height: 1.45, color: textoCarbon),
+                          ),
+                          const SizedBox(height: 22),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 64,
+                            child: FilledButton.icon(
+                              onPressed: _reiniciar,
+                              icon: const Icon(Icons.replay_rounded, size: 28),
+                              label: Text('Volver a jugar', style: Letras.titulo(size: 22, color: Colors.white)),
+                              style: FilledButton.styleFrom(
+                                backgroundColor: Paleta.papaya,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
+            ),
           ),
         ),
+        const Positioned.fill(child: IgnorePointer(child: _Confeti())),
+      ],
+    );
+  }
+}
+
+class _BurbujaGuia extends StatelessWidget {
+  const _BurbujaGuia({required this.texto, required this.acerto});
+
+  final String texto;
+  final bool acerto;
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<Personaje>(
+      valueListenable: Asistente.actual,
+      builder: (context, guia, _) => Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Container(
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(color: guia.fondo, shape: BoxShape.circle),
+            child: AvatarParlante(
+              personaje: guia,
+              tamano: 86,
+              expresion: acerto ? Expresion.feliz : Expresion.preocupada,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: acerto ? verdeSuave : terracotaSuave,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: acerto ? verdeSalvia : terracota, width: 2),
+              ),
+              child: Text(
+                texto,
+                style: const TextStyle(fontSize: 19, height: 1.45, fontWeight: FontWeight.w800, color: textoCarbon),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
+}
+
+/// Lluvia de papelitos de colores para celebrar.
+class _Confeti extends StatefulWidget {
+  const _Confeti();
+
+  @override
+  State<_Confeti> createState() => _ConfetiState();
+}
+
+class _ConfetiState extends State<_Confeti> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 2600),
+  )..forward();
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => CustomPaint(painter: _ConfetiPainter(_c));
+}
+
+class _ConfetiPainter extends CustomPainter {
+  _ConfetiPainter(this.anim) : super(repaint: anim);
+
+  final Animation<double> anim;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final t = anim.value;
+    if (t >= 1) return;
+    final azar = math.Random(7);
+    const colores = [Paleta.papaya, Paleta.mostaza, Paleta.rubor, Paleta.aqua, Paleta.ciruela];
+    for (var i = 0; i < 70; i++) {
+      final x0 = azar.nextDouble() * size.width;
+      final velocidad = 0.6 + azar.nextDouble() * 0.8;
+      final y = -20 + t * velocidad * (size.height + 60);
+      final x = x0 + math.sin(t * 8 + i) * 14;
+      canvas.save();
+      canvas.translate(x, y);
+      canvas.rotate(t * 10 + i);
+      canvas.drawRect(
+        const Rect.fromLTWH(-5, -3, 10, 6),
+        Paint()..color = colores[i % colores.length].withValues(alpha: 1 - t * 0.6),
+      );
+      canvas.restore();
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ConfetiPainter old) => false;
 }
 
 class _PreguntaCaso {

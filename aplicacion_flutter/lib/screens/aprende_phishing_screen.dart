@@ -1,13 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_tts/flutter_tts.dart';
+import '../services/asistente.dart';
+import '../services/voz_humana.dart';
+import '../theme/paleta.dart';
+import '../widgets/avatar_parlante.dart';
+import '../widgets/escena_animada.dart';
+import '../widgets/fondos_dibujados.dart';
 
-const Color fondoCrema = Color(0xFFFAF8F5);
-const Color textoCarbon = Color(0xFF2C3539);
-const Color verdeSalvia = Color(0xFF2A6F4E);
-const Color verdeSuave = Color(0xFFE9F5EE);
-const Color terracota = Color(0xFFD96B43);
-const Color terracotaSuave = Color(0xFFFDF0EA);
-const Color amarilloCalido = Color(0xFFFFF6E5);
+/// Una escena dibujada para cada historia (o la imagen de
+/// assets/escenas/ si el equipo la agrega).
+const List<Escena> _escenasHistorias = [
+  Escena(imagen: 'historia_1.png', lugar: Lugar.sala, personaje: Asistente.mercedes,
+      expresion: Expresion.sorprendida, objeto: Icons.card_giftcard_rounded, globo: '?'),
+  Escena(imagen: 'historia_2.png', lugar: Lugar.oficina, personaje: Asistente.hernando,
+      expresion: Expresion.preocupada, objeto: Icons.phone_in_talk_rounded, globo: '!'),
+  Escena(imagen: 'historia_3.png', lugar: Lugar.casa, personaje: Asistente.carmen,
+      expresion: Expresion.preocupada, objeto: Icons.chat_rounded, globo: '?'),
+  Escena(imagen: 'historia_4.png', lugar: Lugar.sala, personaje: Asistente.gloria,
+      objeto: Icons.coffee_rounded, globo: '5 min'),
+];
+
+const Color fondoCrema = Paleta.crema;
+const Color textoCarbon = Paleta.tinta;
+const Color verdeSalvia = Paleta.aqua;
+const Color verdeSuave = Paleta.aquaSuave;
+const Color terracota = Paleta.papaya;
+const Color terracotaSuave = Paleta.papayaSuave;
+const Color amarilloCalido = Paleta.mostazaSuave;
 
 class AprendePhishingScreen extends StatefulWidget {
   const AprendePhishingScreen({super.key});
@@ -17,7 +35,7 @@ class AprendePhishingScreen extends StatefulWidget {
 }
 
 class _AprendePhishingScreenState extends State<AprendePhishingScreen> {
-  final FlutterTts _tts = FlutterTts();
+  final AdaptadorVoz _tts = VozHumana.adaptador();
   final PageController _pageController = PageController();
   int _historiaActual = 0;
   bool _hablando = false;
@@ -90,7 +108,10 @@ class _AprendePhishingScreenState extends State<AprendePhishingScreen> {
       if (mounted) setState(() => _hablando = false);
     });
 
-    _narrarHistoria(0);
+    final h = _historias[0];
+    _tts.narrar(
+      '${h.etiqueta}. ${h.titulo}. ${h.relato} Consejo clave: ${h.secreto}',
+    );
   }
 
   Future<void> _narrarHistoria(int index) async {
@@ -117,6 +138,7 @@ class _AprendePhishingScreenState extends State<AprendePhishingScreen> {
   @override
   void dispose() {
     _tts.stop();
+    _tts.dispose();
     _pageController.dispose();
     super.dispose();
   }
@@ -216,7 +238,19 @@ class _AprendePhishingScreenState extends State<AprendePhishingScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 14),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: SizedBox(
+                            height: 200,
+                            width: double.infinity,
+                            child: EscenaAnimada(
+                              escena: _escenasHistorias[index],
+                              habla: index == _historiaActual,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
                         Text(
                           h.titulo,
                           style: const TextStyle(
