@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 import '../models/alerta_seguridad.dart';
 
@@ -7,76 +9,94 @@ enum EscenarioAlerta { conDatos, vacio, falla, cargando }
 class RepositorioAlertas {
   EscenarioAlerta escenario = EscenarioAlerta.conDatos;
 
+  static const String _urlApiRemota =
+      'https://raw.githubusercontent.com/escudo-mayor/datos-alertas/main/alertas.json';
+
   final List<AlertaSeguridad> _ejemplos = const [
     AlertaSeguridad(
       id: 1,
-      titulo: 'Un premio inesperado',
-      tipo: 'SMS',
+      titulo: 'El cuento del mercado o bono ganador',
+      tipo: 'Mensaje de texto (SMS)',
       nivelRiesgo: 'Alto',
-      descripcion: 'Un mensaje afirma que ganaste un premio que no recuerdas haber participado.',
-      mensajeEjemplo: '¡FELICIDADES! Ganaste un celular. Reclámalo hoy ingresando tus datos en este enlace.',
+      descripcion:
+          'Te llega un mensaje felicitándote por un supuesto premio, subsidio o mercado en el que nunca te inscribiste.',
+      mensajeEjemplo:
+          '¡FELICIDADES! Fuiste elegido para recibir un bono de 500 mil pesos hoy. Toca estas letras azules y escribe tu cédula y clave para reclamarlo.',
       senales: [
-        'Te ofrecen un premio que no esperabas.',
-        'Te piden actuar rápidamente.',
-        'Solicitan tus datos personales.',
+        'Nadie regala plata ni mercados si no participaste en un sorteo.',
+        'Te meten afán diciendo que tienes que reclamarlo hoy mismo.',
+        'Te piden tocar un enlace azul y anotar tus claves.',
       ],
-      recomendacion: 'No abras el enlace ni entregues tus datos. Si no participaste en un concurso, desconfía del supuesto premio.',
+      recomendacion:
+          'No toques las letras azules ni respondas nada. Borra el mensaje de una vez y sigue tranquilo con tu día.',
     ),
     AlertaSeguridad(
       id: 2,
-      titulo: 'Supuesto bloqueo bancario',
+      titulo: 'El susto de la cuenta o pensión bloqueada',
       tipo: 'WhatsApp',
       nivelRiesgo: 'Alto',
-      descripcion: 'Un mensaje afirma que tu cuenta bancaria será bloqueada.',
-      mensajeEjemplo: 'Su cuenta será bloqueada en 10 minutos. Envíe su clave para evitar el cierre.',
+      descripcion:
+          'Intentan asustarte diciendo que tu cuenta del banco se va a cerrar para que entregues tu clave sin pensar.',
+      mensajeEjemplo:
+          'AVISO URGENTE: Su cuenta de ahorros será bloqueada en 10 minutos por movimientos raros. Envíe su clave por aquí para cancelar el bloqueo.',
       senales: [
-        'Utiliza amenazas para asustarte.',
-        'Te exige responder inmediatamente.',
-        'Solicita una clave bancaria.',
+        'Usan el miedo y te dan pocos minutos para que te asustes.',
+        'Un banco de verdad jamás atiende bloqueos por un chat común.',
+        'Te piden tu clave secreta del cajero o del celular.',
       ],
-      recomendacion: 'No respondas ni compartas tus claves. Comunícate con tu banco utilizando su número oficial.',
+      recomendacion:
+          'Respira con calma y no contestes ese mensaje. Tu plata está segura. Si quieres salir de dudas, ve al banco o llama con ayuda de un familiar.',
     ),
     AlertaSeguridad(
       id: 3,
-      titulo: 'Paquete retenido',
-      tipo: 'SMS',
+      titulo: 'La encomienda que pide plata para llegar',
+      tipo: 'Mensaje de texto (SMS)',
       nivelRiesgo: 'Medio',
-      descripcion: 'Un mensaje dice que tienes un paquete detenido y debes pagar para recibirlo.',
-      mensajeEjemplo: 'Su paquete está retenido. Pague un pequeño valor en este enlace para recibirlo.',
+      descripcion:
+          'Te dicen que hay una caja o regalo a tu nombre que no han podido entregar y te cobran unos pesos para llevártelo.',
+      mensajeEjemplo:
+          'Su paquete no pudo ser entregado porque falta pagar 8.500 pesos de envío. Pague aquí con su tarjeta para recibirlo hoy.',
       senales: [
-        'No identifica claramente la empresa de mensajería.',
-        'Solicita un pago inesperado.',
-        'Incluye un enlace para realizar el supuesto pago.',
+        'No estabas esperando ninguna compra ni encomienda.',
+        'Te cobran un valor pequeñito solo para sacarte los datos de tu tarjeta.',
+        'Trae un enlace extraño para que pagues por internet.',
       ],
-      recomendacion: 'No pagues desde el enlace. Consulta directamente con la empresa de mensajería mediante sus canales oficiales.',
+      recomendacion:
+          'Nunca pongas los números de tu tarjeta en enlaces que llegan por mensaje. Pregúntale primero a tu familia si alguien te envió algo.',
     ),
     AlertaSeguridad(
       id: 4,
-      titulo: 'Correo de remitente desconocido',
+      titulo: 'La supuesta deuda o factura vencida',
       tipo: 'Correo electrónico',
       nivelRiesgo: 'Medio',
-      descripcion: 'Recibes un correo que intenta convencerte de abrir un archivo o enlace.',
-      mensajeEjemplo: 'Estimado usuario: revise urgentemente el documento adjunto para evitar inconvenientes con su cuenta.',
+      descripcion:
+          'Te mandan un correo inventando que debes una factura o un comparendo para que descargues un archivo trampa.',
+      mensajeEjemplo:
+          'Estimado cliente: Tiene una factura pendiente de pago con cobro jurídico mañana. Abra el archivo adjunto para ver su deuda.',
       senales: [
-        'No reconoces a la persona que envía el correo.',
-        'El mensaje utiliza expresiones de urgencia.',
-        'Te invita a abrir archivos inesperados.',
+        'Ni siquiera dicen tu nombre completo, solo ponen "Estimado cliente".',
+        'Amenazan con embargos o multas de un día para otro.',
+        'Quieren que abras un archivo que no pediste.',
       ],
-      recomendacion: 'No abras archivos ni enlaces inesperados. Verifica quién envió el mensaje antes de realizar cualquier acción.',
+      recomendacion:
+          'No abras ese archivo. Revisa tus recibos de papel de toda la vida; si están al día, borra ese correo sin preocuparte.',
     ),
     AlertaSeguridad(
       id: 5,
-      titulo: 'Solicitud de código de verificación',
+      titulo: 'El robo de WhatsApp con los 6 numeritos',
       tipo: 'WhatsApp',
       nivelRiesgo: 'Alto',
-      descripcion: 'Una persona te pide un código que recibiste en tu celular.',
-      mensajeEjemplo: 'Hola, te envié un código por error. ¿Me lo puedes compartir, por favor?',
+      descripcion:
+          'Alguien haciéndose pasar por un vecino, amigo o empresa te pide un código de 6 números que acaba de llegar a tu celular.',
+      mensajeEjemplo:
+          'Hola vecino, qué pena la molestia, por equivocación mandé un código de 6 números a su celular. ¿Me lo pasa por favor que es urgente?',
       senales: [
-        'Te solicitan un código personal.',
-        'La persona puede hacerse pasar por un conocido.',
-        'El código podría permitir el acceso a tu cuenta.',
+        'Te piden esos 6 numeritos que llegaron por mensaje de texto.',
+        'Ponen la excusa de que fue un error o una inscripción a un grupo.',
+        'Si les das ese código, te quitan tu WhatsApp para pedirle plata a tu familia.',
       ],
-      recomendacion: 'Nunca compartas códigos de verificación. Si alguien conocido te lo pide, confirma su identidad por otro medio.',
+      recomendacion:
+          'Esos 6 numeritos son sagrados, no se los pases absolutamente a nadie. Llama a tu conocido por teléfono para avisarle que le hackearon el chat.',
     ),
   ];
 
@@ -85,15 +105,37 @@ class RepositorioAlertas {
       await Completer<void>().future;
     }
 
-    await Future<void>.delayed(const Duration(milliseconds: 800));
-
     if (escenario == EscenarioAlerta.falla) {
-      throw Exception('Falla simulada al cargar los ejemplos educativos');
+      throw Exception('No pudimos cargar los casos en este momento.');
     }
 
     if (escenario == EscenarioAlerta.vacio) {
       return const [];
     }
+
+    try {
+      final respuesta = await http
+          .get(Uri.parse(_urlApiRemota))
+          .timeout(const Duration(milliseconds: 1200));
+
+      if (respuesta.statusCode == 200) {
+        final List<dynamic> datosJson =
+            jsonDecode(respuesta.body) as List<dynamic>;
+        return datosJson.map((item) {
+          final mapa = item as Map<String, dynamic>;
+          return AlertaSeguridad(
+            id: mapa['id'] as int,
+            titulo: mapa['titulo'] as String,
+            tipo: mapa['tipo'] as String,
+            nivelRiesgo: mapa['nivelRiesgo'] as String,
+            descripcion: mapa['descripcion'] as String,
+            mensajeEjemplo: mapa['mensajeEjemplo'] as String,
+            senales: List<String>.from(mapa['senales'] as List<dynamic>),
+            recomendacion: mapa['recomendacion'] as String,
+          );
+        }).toList();
+      }
+    } catch (_) {}
 
     return _ejemplos;
   }

@@ -1,157 +1,323 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 
-const Color azulConsejos = Color(0xFF1557A6);
-const Color fondoConsejos = Color(0xFFF3F7FC);
-const Color verdeConsejos = Color(0xFF159B83);
+const Color fondoCrema = Color(0xFFFAF8F5);
+const Color textoCarbon = Color(0xFF2C3539);
+const Color verdeSalvia = Color(0xFF2A6F4E);
+const Color verdeSuave = Color(0xFFE9F5EE);
+const Color terracota = Color(0xFFD96B43);
+const Color terracotaSuave = Color(0xFFFDF0EA);
+const Color amarilloCalido = Color(0xFFFFF6E5);
 
-class ConsejosSeguridadScreen extends StatelessWidget {
+class ConsejosSeguridadScreen extends StatefulWidget {
   const ConsejosSeguridadScreen({super.key});
 
-  static const List<Map<String, dynamic>> consejos = [
-    {
-      'icono': Icons.lock_rounded,
-      'titulo': 'Protege tus contraseñas',
-      'descripcion': 'Utiliza contraseñas difíciles de adivinar y evita compartirlas con otras personas.',
-      'ejemplo': 'No uses tu fecha de nacimiento como contraseña.',
-    },
-    {
-      'icono': Icons.message_rounded,
-      'titulo': 'Desconfía de mensajes inesperados',
-      'descripcion': 'Algunos mensajes ofrecen premios o anuncian problemas urgentes para engañarte.',
-      'ejemplo': 'Si recibes un mensaje diciendo que ganaste un premio, no te apresures a responder.',
-    },
-    {
-      'icono': Icons.pin_rounded,
-      'titulo': 'No compartas códigos personales',
-      'descripcion': 'Los códigos que llegan a tu celular sirven para proteger tus cuentas.',
-      'ejemplo': 'Nunca entregues por teléfono o mensajes los códigos de verificación de tus cuentas.',
-    },
-    {
-      'icono': Icons.phone_in_talk_rounded,
-      'titulo': 'Ten cuidado con las llamadas',
-      'descripcion': 'Una persona puede hacerse pasar por un trabajador de un banco o una empresa.',
-      'ejemplo': 'Si tienes dudas, cuelga y comunícate directamente con el número oficial de la entidad.',
-    },
-    {
-      'icono': Icons.link_rounded,
-      'titulo': 'Piensa antes de abrir enlaces',
-      'descripcion': 'No abras enlaces enviados por personas desconocidas o mediante mensajes inesperados.',
-      'ejemplo': 'Si un mensaje te pide entrar a un enlace para evitar un supuesto bloqueo, verifica primero.',
-    },
-    {
-      'icono': Icons.support_agent_rounded,
-      'titulo': 'Pide ayuda cuando tengas dudas',
-      'descripcion': 'No tienes que resolver todo solo. Consultar con alguien de confianza puede evitar un engaño.',
-      'ejemplo': 'Antes de enviar dinero o información, habla con un familiar o una persona de confianza.',
-    },
+  @override
+  State<ConsejosSeguridadScreen> createState() =>
+      _ConsejosSeguridadScreenState();
+}
+
+class _ConsejosSeguridadScreenState extends State<ConsejosSeguridadScreen> {
+  final FlutterTts _tts = FlutterTts();
+  int? _consejoActivo;
+
+  static const List<_ReglaDeOro> _reglas = [
+    _ReglaDeOro(
+      numero: '1',
+      icono: Icons.dialpad_rounded,
+      titulo: 'Los 6 numeritos son sagrados',
+      descripcion:
+          'Si te llega un mensaje con un código de números al celular, no se lo dictes a nadie, ni siquiera si dicen llamarte del banco o de WhatsApp.',
+      ejemplo:
+          'Ese código es como la llave de tu casa: quien lo tiene puede entrar a tu cuenta.',
+    ),
+    _ReglaDeOro(
+      numero: '2',
+      icono: Icons.phone_callback_rounded,
+      titulo: 'Ante la duda, cuelga tú primero',
+      descripcion:
+          'Si alguien te llama apurado diciendo que hay un problema con tu pensión, tu EPS o tu tarjeta, cuelga sin pena.',
+      ejemplo:
+          'Los bancos de verdad nunca se enojan porque cuelgues para verificar con un familiar.',
+    ),
+    _ReglaDeOro(
+      numero: '3',
+      icono: Icons.touch_app_rounded,
+      titulo: 'No toques letras azules de desconocidos',
+      descripcion:
+          'Las letras azules o subrayadas en los mensajes te llevan a páginas falsas hechas para robar tus datos.',
+      ejemplo:
+          'Si dicen que tienes un paquete retenido o una multa, no toques el enlace.',
+    ),
+    _ReglaDeOro(
+      numero: '4',
+      icono: Icons.family_restroom_rounded,
+      titulo: 'Confirma por voz con tu familia',
+      descripcion:
+          'Si un supuesto hijo, nieto o amigo te pide plata prestada por mensaje diciendo que cambió de número, llámalo primero.',
+      ejemplo:
+          'Escuchar su voz por llamada normal desenmascara al instante a los imitadores.',
+    ),
+    _ReglaDeOro(
+      numero: '5',
+      icono: Icons.menu_book_rounded,
+      titulo: 'Anota tus claves en una libreta en casa',
+      descripcion:
+          'Es mucho más seguro tener tus claves escritas en un cuaderno guardado en tu mesa de noche que mandarlas por chat.',
+      ejemplo:
+          'No uses tu año de nacimiento ni números seguidos como 1234.',
+    ),
+    _ReglaDeOro(
+      numero: '6',
+      icono: Icons.coffee_rounded,
+      titulo: 'Nada en el celular es tan urgente',
+      descripcion:
+          'El truco favorito de los estafadores es meterte afán. Si algo parece urgente, tómate un café y pregunta primero.',
+      ejemplo:
+          'Consultar con alguien de confianza en casa evita el 99% de los engaños.',
+    ),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _configurarVoz();
+  }
+
+  Future<void> _configurarVoz() async {
+    await _tts.setLanguage('es-CO');
+    await _tts.setSpeechRate(0.42);
+    await _tts.setPitch(0.98);
+
+    _tts.setCompletionHandler(() {
+      if (mounted) setState(() => _consejoActivo = null);
+    });
+    _tts.setCancelHandler(() {
+      if (mounted) setState(() => _consejoActivo = null);
+    });
+  }
+
+  Future<void> _escucharRegla(int index) async {
+    if (_consejoActivo == index) {
+      await _tts.stop();
+      setState(() => _consejoActivo = null);
+      return;
+    }
+
+    final r = _reglas[index];
+    setState(() => _consejoActivo = index);
+    await _tts.stop();
+    await _tts.speak(
+      'Regla número ${r.numero}: ${r.titulo}. ${r.descripcion} Recuerda: ${r.ejemplo}',
+    );
+  }
+
+  Future<void> _escucharResumenCompleto() async {
+    setState(() => _consejoActivo = -1);
+    await _tts.stop();
+    final textoCompleto = _reglas
+        .map((r) => 'Regla ${r.numero}: ${r.titulo}. ${r.descripcion}')
+        .join(' ');
+    await _tts.speak('Estas son tus seis reglas de oro. $textoCompleto');
+  }
+
+  @override
+  void dispose() {
+    _tts.stop();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: fondoConsejos,
+      backgroundColor: fondoCrema,
       appBar: AppBar(
-        backgroundColor: azulConsejos,
-        foregroundColor: Colors.white,
+        backgroundColor: fondoCrema,
+        foregroundColor: textoCarbon,
+        elevation: 0,
         title: const Text(
-          'Consejos de seguridad',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          'Tus 6 Reglas de Oro',
+          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 22),
         ),
+        actions: [
+          TextButton.icon(
+            onPressed: _escucharResumenCompleto,
+            icon: Icon(
+              _consejoActivo == -1
+                  ? Icons.stop_circle_rounded
+                  : Icons.volume_up_rounded,
+              color: verdeSalvia,
+              size: 28,
+            ),
+            label: const Text(
+              'Escuchar todas',
+              style: TextStyle(
+                color: verdeSalvia,
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 800),
-            child: ListView(
-              padding: const EdgeInsets.all(20),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: amarilloCalido,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: const Color(0xFFE5CFA3), width: 1.5),
+            ),
+            child: const Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(22),
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [azulConsejos, Color(0xFF2879C7)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+                Icon(Icons.touch_app_rounded, color: terracota, size: 38),
+                SizedBox(width: 14),
+                Expanded(
+                  child: Text(
+                    'Toca cualquier tarjeta para que Don Prudencio te la lea en voz alta.',
+                    style: TextStyle(
+                      fontSize: 18,
+                      height: 1.35,
+                      fontWeight: FontWeight.w700,
+                      color: textoCarbon,
                     ),
-                    borderRadius: BorderRadius.circular(22),
-                  ),
-                  child: const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Icons.shield_rounded, color: Colors.white, size: 48),
-                      SizedBox(height: 14),
-                      Text(
-                        '¡Cuida tu seguridad digital!',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 25,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        'Pequeñas acciones pueden ayudarte a proteger tu información y evitar engaños en internet.',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 17,
-                          height: 1.5,
-                        ),
-                      ),
-                    ],
                   ),
                 ),
-                const SizedBox(height: 24),
-                const Text(
-                  'Recomendaciones para tu día a día',
-                  style: TextStyle(
-                    color: azulConsejos,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          for (int i = 0; i < _reglas.length; i++)
+            _TarjetaRegla(
+              regla: _reglas[i],
+              activa: _consejoActivo == i,
+              onTap: () => _escucharRegla(i),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TarjetaRegla extends StatelessWidget {
+  const _TarjetaRegla({
+    required this.regla,
+    required this.activa,
+    required this.onTap,
+  });
+
+  final _ReglaDeOro regla;
+  final bool activa;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Material(
+        color: activa ? verdeSuave : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(24),
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: activa ? verdeSalvia : const Color(0xFFE4DFD7),
+                width: activa ? 2.5 : 1.5,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 26,
+                      backgroundColor: activa ? verdeSalvia : terracotaSuave,
+                      child: Icon(
+                        regla.icono,
+                        color: activa ? Colors.white : terracota,
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'REGLA ${regla.numero}',
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w900,
+                              color: verdeSalvia,
+                              letterSpacing: 1.0,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            regla.titulo,
+                            style: const TextStyle(
+                              fontSize: 21,
+                              fontWeight: FontWeight.w900,
+                              color: textoCarbon,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      activa
+                          ? Icons.stop_circle_rounded
+                          : Icons.volume_up_rounded,
+                      color: activa ? terracota : verdeSalvia,
+                      size: 32,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Text(
+                  regla.descripcion,
+                  style: const TextStyle(
+                    fontSize: 19,
+                    height: 1.45,
+                    color: textoCarbon,
                   ),
                 ),
                 const SizedBox(height: 14),
-                ...consejos.map((consejo) {
-                  return _ConsejoCard(consejo: consejo);
-                }),
-                const SizedBox(height: 16),
                 Container(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE2F5EF),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: verdeConsejos),
+                    color: activa ? Colors.white : const Color(0xFFF7F4EE),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  child: const Column(
+                  child: Row(
                     children: [
-                      Icon(
-                        Icons.favorite_rounded,
-                        color: verdeConsejos,
-                        size: 36,
+                      const Icon(
+                        Icons.verified_rounded,
+                        color: verdeSalvia,
+                        size: 24,
                       ),
-                      SizedBox(height: 10),
-                      Text(
-                        'Recuerda',
-                        style: TextStyle(
-                          color: azulConsejos,
-                          fontSize: 21,
-                          fontWeight: FontWeight.bold,
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          regla.ejemplo,
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                            color: textoCarbon,
+                            height: 1.35,
+                          ),
                         ),
                       ),
-                      SizedBox(height: 8),
-                      Text(
-                        'No tengas miedo de preguntar. Aprender a protegerte es un paso importante para navegar por internet con tranquilidad.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 17, height: 1.5),
-                      ),
                     ],
-                  ),
-                ),
-                const SizedBox(height: 20),
-                const Center(
-                  child: Text(
-                    'Fortaleza Cibernética · Aprende y protégete',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.black54, fontSize: 14),
                   ),
                 ),
               ],
@@ -163,84 +329,18 @@ class ConsejosSeguridadScreen extends StatelessWidget {
   }
 }
 
-class _ConsejoCard extends StatelessWidget {
-  const _ConsejoCard({required this.consejo});
+class _ReglaDeOro {
+  const _ReglaDeOro({
+    required this.numero,
+    required this.icono,
+    required this.titulo,
+    required this.descripcion,
+    required this.ejemplo,
+  });
 
-  final Map<String, dynamic> consejo;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: Colors.white,
-      elevation: 2,
-      margin: const EdgeInsets.only(bottom: 14),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEAF2FC),
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(
-                    consejo['icono'] as IconData,
-                    color: azulConsejos,
-                    size: 30,
-                  ),
-                ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Text(
-                    consejo['titulo'] as String,
-                    style: const TextStyle(
-                      color: azulConsejos,
-                      fontSize: 19,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            Text(
-              consejo['descripcion'] as String,
-              style: const TextStyle(fontSize: 16, height: 1.5),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(13),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEAF7F2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Icon(
-                    Icons.lightbulb_rounded,
-                    color: verdeConsejos,
-                    size: 23,
-                  ),
-                  const SizedBox(width: 9),
-                  Expanded(
-                    child: Text(
-                      consejo['ejemplo'] as String,
-                      style: const TextStyle(fontSize: 15, height: 1.4),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  final String numero;
+  final IconData icono;
+  final String titulo;
+  final String descripcion;
+  final String ejemplo;
 }

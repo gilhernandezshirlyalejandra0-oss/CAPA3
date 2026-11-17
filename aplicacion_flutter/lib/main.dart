@@ -1,42 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
 import 'models/alerta_seguridad.dart';
-import 'models/opcion_menu.dart';
 import 'screens/alertas_screen.dart';
 import 'screens/aprende_phishing_screen.dart';
-import 'screens/cuestionario_screen.dart';
 import 'screens/consejos_seguridad_screen.dart';
-import 'viewmodels/bienvenida_viewmodel.dart';
+import 'screens/cuestionario_screen.dart';
+import 'services/voz_humana.dart';
 
-const Color azul = Color(0xFF1557A6);
-const Color azulOscuro = Color(0xFF153B66);
-const Color fondo = Color(0xFFF3F7FC);
-const Color verde = Color(0xFF159B83);
+const Color colorPapel = Color(0xFFF6F2EA);
+const Color colorTinta = Color(0xFF1F2421);
+const Color colorBosque = Color(0xFF1B5E49);
+const Color colorArcilla = Color(0xFFC85A32);
+const Color colorArena = Color(0xFFEBE4D6);
 
 final GoRouter _router = GoRouter(
+  initialLocation: '/intro',
   routes: [
-    GoRoute(path: '/', builder: (context, state) => const BienvenidaScreen()),
     GoRoute(
-      path: '/aprende-phishing',
-      builder: (context, state) => const AprendePhishingScreen(),
+      path: '/intro',
+      builder: (context, state) => const IntroBienvenidaScreen(),
     ),
     GoRoute(
-      path: '/aprende-phishing',
-      builder: (context, state) => const AprendePhishingScreen(),
-    ),
-    GoRoute(
-      path: '/cuestionario',
-      builder: (context, state) => const CuestionarioScreen(),
-    ),
-    GoRoute(
-      path: '/consejos-seguridad',
-      builder: (context, state) => const ConsejosSeguridadScreen(),
-    ),
-    GoRoute(
-      path: '/alertas',
-      builder: (context, state) => const AlertasScreen(),
+      path: '/',
+      builder: (context, state) => const ContenedorCuatroPantallas(),
     ),
     GoRoute(
       path: '/alertas/:id',
@@ -49,560 +36,314 @@ final GoRouter _router = GoRouter(
 );
 
 void main() {
-  runApp(const FortalezaApp());
+  runApp(const EscudoMayorApp());
 }
 
-class FortalezaApp extends StatelessWidget {
-  const FortalezaApp({super.key});
+class EscudoMayorApp extends StatelessWidget {
+  const EscudoMayorApp({super.key});
 
   @override
   Widget build(BuildContext context) {
+  
+
     return MaterialApp.router(
-      title: 'Fortaleza Cibernética',
+      title: 'Escudo Mayor',
       debugShowCheckedModeBanner: false,
       routerConfig: _router,
       theme: ThemeData(
         useMaterial3: true,
-        scaffoldBackgroundColor: fondo,
-        colorScheme: ColorScheme.fromSeed(seedColor: azul, primary: azul),
-        fontFamily: 'Roboto',
+        scaffoldBackgroundColor: colorPapel,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: colorBosque,
+          primary: colorBosque,
+          secondary: colorArcilla,
+          surface: colorPapel,
+        ),
       ),
+      builder: (context, child) {
+        return LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth > 520) {
+              return Container(
+                color: const Color(0xFF222826),
+                alignment: Alignment.center,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Container(
+                  width: 412,
+                  height: 860,
+                  decoration: BoxDecoration(
+                    color: colorPapel,
+                    borderRadius: BorderRadius.circular(38),
+                    border: Border.all(color: const Color(0xFF3A423F), width: 8),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black45,
+                        blurRadius: 35,
+                        offset: Offset(0, 18),
+                      ),
+                    ],
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: child,
+                ),
+              );
+            }
+            return child!;
+          },
+        );
+      },
     );
   }
 }
 
-class BienvenidaScreen extends StatefulWidget {
-  const BienvenidaScreen({super.key});
+class IntroBienvenidaScreen extends StatefulWidget {
+  const IntroBienvenidaScreen({super.key});
 
   @override
-  State<BienvenidaScreen> createState() => _BienvenidaScreenState();
+  State<IntroBienvenidaScreen> createState() => _IntroBienvenidaScreenState();
 }
 
-class _BienvenidaScreenState extends State<BienvenidaScreen> {
-  static const MethodChannel _voz = MethodChannel('fortaleza/voz');
-
-  String? _mensaje;
-  late final BienvenidaViewModel _viewModel;
-
-  List<OpcionMenu> get _opciones => _viewModel.opciones;
+class _IntroBienvenidaScreenState extends State<IntroBienvenidaScreen>
+    with SingleTickerProviderStateMixin {
+  double _opacidadLogo = 0.0;
+  double _opacidadPersonaje = 0.0;
 
   @override
   void initState() {
     super.initState();
-    _viewModel = BienvenidaViewModel();
-    _viewModel.cargarOpciones();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _reproducirSaludo();
-    });
+    _iniciarEntrada();
   }
 
-  Future<void> _reproducirSaludo() async {
-    try {
-      await _voz.invokeMethod('saludar', {
-        'texto':
-            'Bienvenido a Fortaleza Cibernética. '
-            'Aquí aprenderás a reconocer engaños digitales, '
-            'proteger tus datos y navegar por internet con seguridad.',
-      });
-
-      if (mounted) {
-        setState(() => _mensaje = null);
-      }
-    } on PlatformException {
-      _mostrarAvisoVoz();
-    } on MissingPluginException {
-      _mostrarAvisoVoz();
-    }
-  }
-
-  void _mostrarAvisoVoz() {
+  Future<void> _iniciarEntrada() async {
+    await Future<void>.delayed(const Duration(milliseconds: 250));
     if (!mounted) return;
+    setState(() => _opacidadLogo = 1.0);
 
-    setState(() {
-      _mensaje =
-          'Puedes continuar utilizando los botones. '
-          'La bienvenida hablada no está disponible en este dispositivo.';
-    });
-  }
+    await Future<void>.delayed(const Duration(milliseconds: 1100));
+    if (!mounted) return;
+    setState(() => _opacidadPersonaje = 1.0);
 
-  void _seleccionarOpcion(String titulo) {
-    if (titulo == 'Aprende sobre el phishing') {
-      context.push('/aprende-phishing');
-      return;
-    }
-
-    if (titulo == 'Reconoce los engaños') {
-      context.push('/alertas');
-      return;
-    }
-
-    if (titulo == 'Pon a prueba lo aprendido') {
-      context.push('/cuestionario');
-      return;
-    }
-
-    if (titulo == 'Consejos de seguridad') {
-      context.push('/consejos-seguridad');
-      return;
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('La sección "$titulo" estará disponible próximamente.'),
-        behavior: SnackBarBehavior.floating,
-      ),
+    VozHumana.hablar(
+      '¡Hola! Qué bueno verte por aquí. Soy prudencio, y hoy te voy a enseñar varios trucos sencillos para que nadie te engañe por el celular. Toca el botón de abajo para empezar.',
     );
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('La sección "$titulo" estará disponible próximamente.'),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  @override
-  void dispose() {
-    _viewModel.dispose();
-    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: colorPapel,
       body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1000),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(22),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _encabezado(),
-                  const SizedBox(height: 24),
-                  _bienvenida(),
-                  if (_mensaje != null) ...[
-                    const SizedBox(height: 16),
-                    _avisoVoz(),
-                  ],
-                  const SizedBox(height: 30),
-                  const Text(
-                    '¿Qué quieres aprender hoy?',
-                    style: TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.bold,
-                      color: azulOscuro,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Elige un tema y aprende a protegerte paso a paso.',
-                    style: TextStyle(
-                      fontSize: 18,
-                      height: 1.4,
-                      color: Color(0xFF526579),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final dobleColumna = constraints.maxWidth >= 620;
-                      final ancho = dobleColumna
-                          ? (constraints.maxWidth - 18) / 2
-                          : constraints.maxWidth;
-
-                      return Wrap(
-                        spacing: 18,
-                        runSpacing: 18,
-                        children: [
-                          for (int i = 0; i < _opciones.length; i++)
-                            SizedBox(
-                              width: ancho,
-                              child: _TarjetaEducativa(
-                                opcion: _opciones[i],
-                                numero: i + 1,
-                                onPressed: () =>
-                                    _seleccionarOpcion(_opciones[i].titulo),
-                              ),
-                            ),
-                        ],
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  _tarjetaAyuda(),
-                  const SizedBox(height: 26),
-                  Center(
-                    child: OutlinedButton.icon(
-                      onPressed: _reproducirSaludo,
-                      icon: const Icon(Icons.volume_up_rounded, size: 26),
-                      label: const Text('Escuchar bienvenida'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: azul,
-                        minimumSize: const Size(240, 58),
-                        side: const BorderSide(color: azul, width: 1.5),
-                        textStyle: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 26),
-                  const Divider(color: Color(0xFFD8E3EF)),
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Fortaleza Cibernética',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
-                      color: azulOscuro,
-                    ),
-                  ),
-                  const SizedBox(height: 5),
-                  const Text(
-                    'Aprender también es protegerse.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 15, color: Color(0xFF526579)),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Proyecto académico · Ingeniería Informática',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 13, color: Color(0xFF718096)),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _encabezado() {
-    return Row(
-      children: [
-        Container(
-          height: 54,
-          width: 54,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: [azul, Color(0xFF3586D5)]),
-            borderRadius: BorderRadius.circular(17),
-          ),
-          child: const Icon(
-            Icons.shield_rounded,
-            color: Colors.white,
-            size: 32,
-          ),
-        ),
-        const SizedBox(width: 13),
-        const Expanded(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                'Fortaleza Cibernética',
-                style: TextStyle(
-                  fontSize: 21,
-                  fontWeight: FontWeight.bold,
-                  color: azulOscuro,
-                ),
-              ),
-              Text(
-                'Educación para una vida digital segura',
-                style: TextStyle(fontSize: 14, color: Color(0xFF526579)),
-              ),
-            ],
-          ),
-        ),
-        const Icon(Icons.verified_user_rounded, color: verde, size: 30),
-      ],
-    );
-  }
-
-  Widget _bienvenida() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF1557A6), Color(0xFF287BC2)],
-        ),
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: azul.withValues(alpha: 0.20),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              AnimatedOpacity(
+                opacity: _opacidadLogo,
+                duration: const Duration(milliseconds: 900),
+                curve: Curves.easeOut,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      '¡Hola! 👋',
-                      style: TextStyle(
-                        fontSize: 31,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
                       ),
-                    ),
-                    SizedBox(height: 12),
-                    Text(
-                      'Tu seguridad comienza aprendiendo.',
-                      style: TextStyle(
-                        fontSize: 23,
-                        height: 1.3,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                      decoration: BoxDecoration(
+                        color: colorBosque,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: const Text(
+                        'ESCUDO MAYOR',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 15,
+                          letterSpacing: 1.5,
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
-              const Icon(
-                Icons.school_rounded,
-                size: 75,
-                color: Color(0xFFD8F4EE),
+              const Spacer(),
+              AnimatedOpacity(
+                opacity: _opacidadPersonaje,
+                duration: const Duration(milliseconds: 800),
+                child: Column(
+                  children: [
+                    const AvatarGuiaAnimado(tamano: 190),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Tu plata y tu WhatsApp bien cuidados',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        color: colorTinta,
+                        height: 1.15,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Container(
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(4),
+                          topRight: Radius.circular(22),
+                          bottomLeft: Radius.circular(22),
+                          bottomRight: Radius.circular(22),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.06),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: const Text(
+                        '“Aquí no hablamos con palabras raras. Te muestro los mensajes falsos tal como llegan al celular y te los leo en voz alta.”',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 18,
+                          height: 1.4,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF3D4441),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Spacer(),
+              AnimatedOpacity(
+                opacity: _opacidadPersonaje,
+                duration: const Duration(milliseconds: 800),
+                child: Column(
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      height: 60,
+                      child: FilledButton(
+                        onPressed: () {
+                          VozHumana.detener();
+                          context.go('/');
+                        },
+                        style: FilledButton.styleFrom(
+                          backgroundColor: colorArcilla,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                        ),
+                        child: const Text(
+                          'Comenzar recorrido',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    TextButton.icon(
+                      onPressed: () => VozHumana.hablar(
+                        '¡Hola! Toca el botón naranja que dice Comenzar recorrido para ver los mensajes de ejemplo.',
+                      ),
+                      icon: const Icon(Icons.volume_up_rounded, color: colorBosque),
+                      label: const Text(
+                        'Probar sonido de voz',
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                          color: colorBosque,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 18),
-          const Text(
-            'Descubre cómo reconocer los engaños digitales '
-            'y cuidar tu información con lecciones fáciles y prácticas.',
-            style: TextStyle(fontSize: 18, height: 1.5, color: Colors.white),
-          ),
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 11),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.16),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.menu_book_rounded, color: Colors.white, size: 23),
-                SizedBox(width: 9),
-                Flexible(
-                  child: Text(
-                    'Aprende a tu propio ritmo',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _avisoVoz() {
-    return Container(
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF4D8),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE8C66A)),
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.info_outline_rounded,
-            color: Color(0xFF805B13),
-            size: 27,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              _mensaje!,
-              style: const TextStyle(
-                fontSize: 16,
-                height: 1.4,
-                color: Color(0xFF634B19),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _tarjetaAyuda() {
-    return Container(
-      padding: const EdgeInsets.all(19),
-      decoration: BoxDecoration(
-        color: const Color(0xFFE2F4EF),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFB5DFD2)),
-      ),
-      child: const Row(
-        children: [
-          Icon(Icons.favorite_rounded, color: verde, size: 38),
-          SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '¡No tienes que saberlo todo!',
-                  style: TextStyle(
-                    fontSize: 19,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF126D5D),
-                  ),
-                ),
-                SizedBox(height: 5),
-                Text(
-                  'Aprende con calma. Cada paso te ayuda a '
-                  'navegar por internet con mayor confianza.',
-                  style: TextStyle(
-                    fontSize: 16,
-                    height: 1.4,
-                    color: Color(0xFF285B53),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _TarjetaEducativa extends StatelessWidget {
-  const _TarjetaEducativa({
-    required this.opcion,
-    required this.numero,
-    required this.onPressed,
-  });
+class ContenedorCuatroPantallas extends StatefulWidget {
+  const ContenedorCuatroPantallas({super.key});
 
-  final OpcionMenu opcion;
-  final int numero;
-  final VoidCallback onPressed;
+  @override
+  State<ContenedorCuatroPantallas> createState() =>
+      _ContenedorCuatroPantallasState();
+}
 
-  Color get _color {
-    switch (numero) {
-      case 1:
-        return const Color(0xFF3478C5);
-      case 2:
-        return const Color(0xFFE39A36);
-      case 3:
-        return const Color(0xFF159B83);
-      default:
-        return const Color(0xFF8064B5);
-    }
-  }
+class _ContenedorCuatroPantallasState extends State<ContenedorCuatroPantallas> {
+  int _indiceActual = 0;
 
-  Color get _fondoIcono {
-    switch (numero) {
-      case 1:
-        return const Color(0xFFE8F1FF);
-      case 2:
-        return const Color(0xFFFFF2DF);
-      case 3:
-        return const Color(0xFFE3F5EF);
-      default:
-        return const Color(0xFFF0EAFE);
-    }
+  final List<Widget> _pantallas = const [
+    AprendePhishingScreen(),
+    AlertasScreen(),
+    ConsejosSeguridadScreen(),
+    CuestionarioScreen(),
+  ];
+
+  void _cambiarPantalla(int index) {
+    setState(() => _indiceActual = index);
+    const saludos = [
+      'Historias reales. Desliza para escuchar cómo engañan por teléfono.',
+      'Buzón de mensajes falsos. Toca un chat para abrirlo.',
+      'Seis costumbres seguras para tu día a día.',
+      'Juego de práctica. ¿Qué responderías tú en estos casos?',
+    ];
+    VozHumana.hablar(saludos[index]);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: '${opcion.titulo}. ${opcion.descripcion}',
-      child: Material(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(23),
-        child: InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(23),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(23),
-              border: Border.all(color: const Color(0xFFE0E9F2)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.035),
-                  blurRadius: 12,
-                  offset: const Offset(0, 5),
-                ),
-              ],
+    return Scaffold(
+      body: IndexedStack(
+        index: _indiceActual,
+        children: _pantallas,
+      ),
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          border: Border(top: BorderSide(color: colorArena, width: 1.5)),
+        ),
+        child: NavigationBar(
+          height: 68,
+          backgroundColor: Colors.white,
+          elevation: 0,
+          indicatorColor: const Color(0xFFDCECE5),
+          selectedIndex: _indiceActual,
+          onDestinationSelected: _cambiarPantalla,
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.auto_stories_outlined),
+              selectedIcon: Icon(Icons.auto_stories_rounded, color: colorBosque),
+              label: 'Historias',
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      height: 62,
-                      width: 62,
-                      decoration: BoxDecoration(
-                        color: _fondoIcono,
-                        borderRadius: BorderRadius.circular(19),
-                      ),
-                      child: Icon(opcion.icono, size: 34, color: _color),
-                    ),
-                    Icon(Icons.arrow_forward_rounded, color: _color, size: 27),
-                  ],
-                ),
-                const SizedBox(height: 17),
-                Text(
-                  opcion.titulo,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    height: 1.25,
-                    fontWeight: FontWeight.bold,
-                    color: azulOscuro,
-                  ),
-                ),
-                const SizedBox(height: 9),
-                Text(
-                  opcion.descripcion,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    height: 1.4,
-                    color: Color(0xFF526579),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  'Comenzar a aprender',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: _color,
-                  ),
-                ),
-              ],
+            NavigationDestination(
+              icon: Icon(Icons.mark_chat_unread_outlined),
+              selectedIcon: Icon(Icons.mark_chat_unread_rounded, color: colorBosque),
+              label: 'Chats falsos',
             ),
-          ),
+            NavigationDestination(
+              icon: Icon(Icons.key_outlined),
+              selectedIcon: Icon(Icons.key_rounded, color: colorBosque),
+              label: 'Claves',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.extension_outlined),
+              selectedIcon: Icon(Icons.extension_rounded, color: colorBosque),
+              label: 'Juego',
+            ),
+          ],
         ),
       ),
     );

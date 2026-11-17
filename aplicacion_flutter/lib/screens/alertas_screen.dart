@@ -1,15 +1,15 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../data/repositorio_alertas.dart';
 import '../models/alerta_seguridad.dart';
+import '../services/voz_humana.dart';
 import '../viewmodels/alertas_viewmodel.dart';
 
-const Color azulPrincipal = Color(0xFF1557A6);
-const Color azulOscuro = Color(0xFF153B66);
-const Color verdePrincipal = Color(0xFF159B83);
-const Color fondoClaro = Color(0xFFF2F7FC);
+const Color colorPapel = Color(0xFFF6F2EA);
+const Color colorTinta = Color(0xFF1F2421);
+const Color colorBosque = Color(0xFF1B5E49);
+const Color colorArcilla = Color(0xFFC85A32);
+const Color verdeWhatsApp = Color(0xFFE7FFDB);
 
 class AlertasScreen extends StatelessWidget {
   const AlertasScreen({super.key});
@@ -18,534 +18,494 @@ class AlertasScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (_) => AlertasViewModel()..cargar(),
-      child: const _ContenidoAlertas(),
+      child: const _BandejaChatsFalsos(),
     );
   }
 }
 
-class _ContenidoAlertas extends StatelessWidget {
-  const _ContenidoAlertas();
+class _BandejaChatsFalsos extends StatelessWidget {
+  const _BandejaChatsFalsos();
 
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<AlertasViewModel>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF4F8FF),
+      backgroundColor: colorPapel,
       appBar: AppBar(
-        backgroundColor: Colors.white.withValues(alpha: 0.85),
-        foregroundColor: azulOscuro,
-        elevation: 0,
-        scrolledUnderElevation: 0,
+        backgroundColor: colorBosque,
+        foregroundColor: Colors.white,
         title: const Text(
-          'Reconoce los engaños',
-          style: TextStyle(
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.4,
-          ),
+          'Mensajes sospechosos',
+          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
         ),
         actions: [
-          if (kDebugMode)
-            PopupMenuButton<EscenarioAlerta>(
-              tooltip: 'Probar escenarios',
-              onSelected: vm.cambiarEscenario,
-              itemBuilder: (_) => const [
-                PopupMenuItem(
-                  value: EscenarioAlerta.conDatos,
-                  child: Text('Probar: con datos'),
-                ),
-                PopupMenuItem(
-                  value: EscenarioAlerta.vacio,
-                  child: Text('Probar: lista vacía'),
-                ),
-                PopupMenuItem(
-                  value: EscenarioAlerta.falla,
-                  child: Text('Probar: error'),
-                ),
-                PopupMenuItem(
-                  value: EscenarioAlerta.cargando,
-                  child: Text('Probar: cargando'),
-                ),
-              ],
+          IconButton(
+            icon: const Icon(Icons.volume_up_rounded),
+            onPressed: () => VozHumana.hablar(
+              'Estos son cinco mensajes falsos que suelen llegar al celular. Toca cualquiera para abrirlo y ver dónde está la trampa.',
             ),
+          ),
         ],
       ),
-      body: _construirContenido(context, vm),
-    );
-  }
-
-  Widget _construirContenido(BuildContext context, AlertasViewModel vm) {
-    switch (vm.estado) {
-      case EstadoAlertas.cargando:
-        return Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFFF4F8FF), Color(0xFFEAF4FF)],
-            ),
-          ),
-          child: const Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircularProgressIndicator(color: verdePrincipal),
-                SizedBox(height: 16),
-                Text(
-                  'Preparando tus ejemplos...',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: azulOscuro,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-
-      case EstadoAlertas.vacio:
-        return Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFFF4F8FF), Color(0xFFEAF4FF)],
-            ),
-          ),
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Container(
-                padding: const EdgeInsets.all(28),
-                constraints: const BoxConstraints(maxWidth: 420),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(28),
-                  boxShadow: [
-                    BoxShadow(
-                      color: azulPrincipal.withValues(alpha: 0.12),
-                      blurRadius: 24,
-                      offset: const Offset(0, 16),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 94,
-                      height: 94,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFE9F2FF),
-                        borderRadius: BorderRadius.circular(28),
-                      ),
-                      child: const Icon(
-                        Icons.menu_book_outlined,
-                        size: 52,
-                        color: azulPrincipal,
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    const Text(
-                      'Todavía no hay ejemplos disponibles.',
-                      textAlign: TextAlign.center,
+      body: vm.estado == EstadoAlertas.cargando
+          ? const Center(child: CircularProgressIndicator(color: colorBosque))
+          : ListView.separated(
+              padding: const EdgeInsets.all(16),
+              itemCount: vm.alertas.length + 1,
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              itemBuilder: (context, index) {
+                if (index == 0) {
+                  return const Padding(
+                    padding: EdgeInsets.only(bottom: 6),
+                    child: Text(
+                      'Toca un mensaje para abrirlo paso a paso:',
                       style: TextStyle(
-                        fontSize: 22,
-                        color: azulOscuro,
-                        fontWeight: FontWeight.w700,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF4A524E),
                       ),
                     ),
-                    const SizedBox(height: 18),
-                    ElevatedButton.icon(
-                      onPressed: vm.cargar,
-                      icon: const Icon(Icons.refresh_rounded),
-                      label: const Text('Volver a intentar'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: azulPrincipal,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(52),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
+                  );
+                }
+                final alerta = vm.alertas[index - 1];
+                final horas = ['9:14 a. m.', '10:42 a. m.', '2:15 p. m.', '4:30 p. m.', '6:05 p. m.'];
+                return _ItemChatSimulado(
+                  alerta: alerta,
+                  hora: horas[(index - 1) % horas.length],
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => DetalleAlertaScreen(alerta: alerta),
                       ),
-                    ),
-                  ],
-                ),
-              ),
+                    );
+                  },
+                );
+              },
             ),
-          ),
-        );
-
-      case EstadoAlertas.error:
-        return Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFFF4F8FF), Color(0xFFEAF4FF)],
-            ),
-          ),
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Container(
-                padding: const EdgeInsets.all(28),
-                constraints: const BoxConstraints(maxWidth: 420),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(28),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.red.withValues(alpha: 0.08),
-                      blurRadius: 20,
-                      offset: const Offset(0, 16),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 94,
-                      height: 94,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFECEC),
-                        borderRadius: BorderRadius.circular(28),
-                      ),
-                      child: const Icon(
-                        Icons.error_outline_rounded,
-                        size: 52,
-                        color: Colors.red,
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    Text(
-                      vm.mensajeError,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        color: azulOscuro,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    ElevatedButton.icon(
-                      onPressed: vm.cargar,
-                      icon: const Icon(Icons.refresh_rounded),
-                      label: const Text('Reintentar'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red.shade500,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size.fromHeight(52),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        );
-
-      case EstadoAlertas.listo:
-        return Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFFF4F8FF), Color(0xFFE9F1FF), Color(0xFFF5F9FF)],
-            ),
-          ),
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(18, 18, 18, 32),
-            children: [
-              _HeroAlertas(),
-              const SizedBox(height: 24),
-              const Row(
-                children: [
-                  Icon(Icons.local_library_rounded, color: azulPrincipal, size: 24),
-                  SizedBox(width: 8),
-                  Text(
-                    'Situaciones para aprender',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                      color: azulOscuro,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Selecciona un ejemplo para descubrir cómo reconocerlo.',
-                style: TextStyle(fontSize: 16, color: Color(0xFF53677F)),
-              ),
-              const SizedBox(height: 18),
-              for (int index = 0; index < vm.alertas.length; index++) ...[
-                _TarjetaEjemplo(
-                  alerta: vm.alertas[index],
-                  numero: index + 1,
-                  onTap: () => _mostrarDetalle(context, vm.alertas[index]),
-                ),
-                const SizedBox(height: 14),
-              ],
-              const SizedBox(height: 14),
-              Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE2F5EF),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFFBFE6D8)),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.favorite_rounded, color: verdePrincipal, size: 30),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Recuerda: tomarte un momento para verificar un mensaje puede ayudarte a evitar engaños.',
-                        style: TextStyle(
-                          fontSize: 16,
-                          height: 1.4,
-                          color: azulOscuro,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-    }
-  }
-
-  void _mostrarDetalle(BuildContext context, AlertaSeguridad alerta) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => DetalleAlertaScreen(alerta: alerta),
-      ),
     );
   }
 }
 
-class _HeroAlertas extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF1557A6),
-            Color(0xFF1B6FCA),
-            Color(0xFF2B97D8),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(30),
-        boxShadow: [
-          BoxShadow(
-            color: azulPrincipal.withValues(alpha: 0.25),
-            blurRadius: 24,
-            offset: const Offset(0, 18),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            right: -10,
-            top: -16,
-            child: Container(
-              width: 150,
-              height: 150,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.08),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-          Positioned(
-            right: 28,
-            bottom: -18,
-            child: Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.06),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.shield_outlined, color: Colors.white, size: 16),
-                    SizedBox(width: 8),
-                    Text(
-                      'Aprende y protege',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.4,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 18),
-              const Icon(Icons.lightbulb_outline, color: Colors.white, size: 46),
-              const SizedBox(height: 14),
-              const Text(
-                '¡Aprende a reconocer los engaños!',
-                style: TextStyle(
-                  fontSize: 28,
-                  height: 1.2,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Conoce situaciones que pueden ocurrir por mensajes, correos o WhatsApp. '
-                'Identifica señales claras y actúa con calma.',
-                style: TextStyle(
-                  fontSize: 16,
-                  height: 1.5,
-                  color: Colors.white70,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TarjetaEjemplo extends StatelessWidget {
-  const _TarjetaEjemplo({
+class _ItemChatSimulado extends StatelessWidget {
+  const _ItemChatSimulado({
     required this.alerta,
-    required this.numero,
+    required this.hora,
     required this.onTap,
   });
 
   final AlertaSeguridad alerta;
-  final int numero;
+  final String hora;
   final VoidCallback onTap;
 
-  IconData get icono {
-    switch (alerta.tipo) {
-      case 'SMS':
-        return Icons.sms_rounded;
-      case 'WhatsApp':
-        return Icons.chat_rounded;
-      case 'Correo electrónico':
-        return Icons.email_rounded;
-      default:
-        return Icons.message_rounded;
-    }
+  @override
+  Widget build(BuildContext context) {
+    final esWhatsApp = alerta.tipo.toLowerCase().contains('whatsapp');
+
+    return Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                radius: 26,
+                backgroundColor: esWhatsApp
+                    ? const Color(0xFF25D366)
+                    : const Color(0xFF3B6E8C),
+                child: Icon(
+                  esWhatsApp ? Icons.chat_rounded : Icons.sms_rounded,
+                  color: Colors.white,
+                  size: 26,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          alerta.tipo,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w900,
+                            color: colorArcilla,
+                          ),
+                        ),
+                        Text(
+                          hora,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black45,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      alerta.titulo,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: colorTinta,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      alerta.mensajeEjemplo,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        color: Colors.black54,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class DetalleAlertaScreen extends StatefulWidget {
+  const DetalleAlertaScreen({super.key, required this.alerta});
+
+  final AlertaSeguridad alerta;
+
+  @override
+  State<DetalleAlertaScreen> createState() => _DetalleAlertaScreenState();
+}
+
+class _DetalleAlertaScreenState extends State<DetalleAlertaScreen> {
+  final PageController _controller = PageController();
+  int _paso = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() => _hablarPaso(0));
+  }
+
+  @override
+  void dispose() {
+    VozHumana.detener();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _hablarPaso(int index) {
+    final a = widget.alerta;
+    final textos = [
+      'Mira cómo llega este mensaje por ${a.tipo}: ${a.mensajeEjemplo}',
+      '¿Qué están intentando hacerte? ${a.descripcion}',
+      'Fíjate en estas trampas: ${a.senales.join(". ")}',
+      'Lo que debes hacer es muy sencillo: ${a.recomendacion}',
+    ];
+    VozHumana.hablar(textos[index]);
+  }
+
+  void _irAPaso(int nuevo) {
+    _controller.animateToPage(
+      nuevo,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOut,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: azulPrincipal.withValues(alpha: 0.08),
-            blurRadius: 18,
-            offset: const Offset(0, 10),
+    final a = widget.alerta;
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFEAE3D5),
+      appBar: AppBar(
+        backgroundColor: colorBosque,
+        foregroundColor: Colors.white,
+        title: Text(
+          a.titulo,
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.volume_up_rounded),
+            onPressed: () => _hablarPaso(_paso),
           ),
         ],
-        border: Border.all(color: const Color(0xFFE0EAF4)),
       ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(24),
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.all(18),
+      body: Column(
+        children: [
+          Container(
+            color: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xFFEAF3FF), Color(0xFFDDEEFF)],
-                    ),
-                    borderRadius: BorderRadius.circular(18),
+                Text(
+                  'Parte ${_paso + 1} de 4',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 16,
+                    color: colorBosque,
                   ),
-                  child: Icon(icono, color: azulPrincipal, size: 32),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
+                Row(
+                  children: List.generate(4, (i) {
+                    return Container(
+                      width: i == _paso ? 24 : 10,
+                      height: 10,
+                      margin: const EdgeInsets.only(left: 6),
+                      decoration: BoxDecoration(
+                        color: i == _paso ? colorArcilla : Colors.black12,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    );
+                  }),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: PageView(
+              controller: _controller,
+              onPageChanged: (i) {
+                setState(() => _paso = i);
+                _hablarPaso(i);
+              },
+              children: [
+                // Pantalla 1: Simulación real de chat de teléfono
+                Padding(
+                  padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'EJEMPLO $numero',
-                        style: const TextStyle(
-                          color: verdePrincipal,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        alerta.titulo,
-                        style: const TextStyle(
-                          color: azulOscuro,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        alerta.tipo,
-                        style: const TextStyle(
-                          color: Color(0xFF53677F),
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      const Row(
-                        children: [
-                          Text(
-                            'Aprender a reconocerlo',
-                            style: TextStyle(
-                              color: azulPrincipal,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                            ),
+                      Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: Colors.black12,
+                            borderRadius: BorderRadius.circular(10),
                           ),
-                          SizedBox(width: 6),
-                          Icon(Icons.arrow_forward_rounded, color: azulPrincipal, size: 18),
-                        ],
+                          child: Text(
+                            'Número desconocido · ${a.tipo}',
+                            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      Container(
+                        padding: const EdgeInsets.all(18),
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(4),
+                            topRight: Radius.circular(20),
+                            bottomLeft: Radius.circular(20),
+                            bottomRight: Radius.circular(20),
+                          ),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 3)),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              '~ Desconocido',
+                              style: TextStyle(
+                                color: colorArcilla,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              a.mensajeEjemplo,
+                              style: const TextStyle(
+                                fontSize: 21,
+                                height: 1.4,
+                                fontWeight: FontWeight.w700,
+                                color: colorTinta,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            const Align(
+                              alignment: Alignment.bottomRight,
+                              child: Text(
+                                '10:42 a. m.',
+                                style: TextStyle(fontSize: 13, color: Colors.black45),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFE8E0),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Row(
+                          children: [
+                            Icon(Icons.pan_tool_rounded, color: colorArcilla),
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                '¡Alto ahí! Así se ve el mensaje cuando llega a tu celular. Toca "Siguiente" abajo.',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Pantalla 2: Qué buscan
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Container(
+                    padding: const EdgeInsets.all(22),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(22),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          '¿En qué consiste el engaño?',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
+                            color: colorArcilla,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          a.descripcion,
+                          style: const TextStyle(
+                            fontSize: 21,
+                            height: 1.45,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Pantalla 3: Las pistas
+                ListView(
+                  padding: const EdgeInsets.all(20),
+                  children: [
+                    const Text(
+                      '3 detalles que los delatan:',
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+                    ),
+                    const SizedBox(height: 12),
+                    for (int i = 0; i < a.senales.length; i++)
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 16,
+                              backgroundColor: colorArcilla,
+                              child: Text(
+                                '${i + 1}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                a.senales[i],
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+
+                // Pantalla 4: Respuesta correcta
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: const BoxDecoration(
+                          color: verdeWhatsApp,
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(20),
+                            topRight: Radius.circular(4),
+                            bottomLeft: Radius.circular(20),
+                            bottomRight: Radius.circular(20),
+                          ),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black12, blurRadius: 8, offset: Offset(0, 3)),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Lo que tú haces:',
+                              style: TextStyle(
+                                color: colorBosque,
+                                fontWeight: FontWeight.w900,
+                                fontSize: 15,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              a.recomendacion,
+                              style: const TextStyle(
+                                fontSize: 21,
+                                height: 1.4,
+                                fontWeight: FontWeight.w800,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text('Seguro ', style: TextStyle(fontSize: 13, color: Colors.black54)),
+                                Icon(Icons.done_all_rounded, size: 18, color: Colors.blue),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -553,297 +513,47 @@ class _TarjetaEjemplo extends StatelessWidget {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class DetalleAlertaScreen extends StatelessWidget {
-  const DetalleAlertaScreen({super.key, required this.alerta});
-
-  final AlertaSeguridad alerta;
-
-  @override
-  Widget build(BuildContext context) {
-    final Color chipColor = alerta.nivelRiesgo == 'Alto'
-        ? const Color(0xFFFFE7E7)
-        : const Color(0xFFEAF8F2);
-    final Color chipTextColor = alerta.nivelRiesgo == 'Alto'
-        ? const Color(0xFFB42318)
-        : const Color(0xFF0F766E);
-
-    return Scaffold(
-      backgroundColor: const Color(0xFFF4F8FF),
-      appBar: AppBar(
-        title: const Text('Aprende a reconocerlo'),
-        backgroundColor: Colors.white.withValues(alpha: 0.82),
-        foregroundColor: azulOscuro,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(20),
-        children: [
           Container(
-            padding: const EdgeInsets.all(22),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFFEAF3FF), Color(0xFFF5F7FF)],
-              ),
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: const Color(0xFFD9E7F8)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
-                            color: azulPrincipal.withValues(alpha: 0.10),
-                            blurRadius: 16,
-                            offset: const Offset(0, 10),
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.school_rounded,
-                        color: azulPrincipal,
-                        size: 34,
-                      ),
-                    ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: chipColor,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        'Riesgo ${alerta.nivelRiesgo}',
-                        style: TextStyle(
-                          color: chipTextColor,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 18),
-                Text(
-                  alerta.titulo,
-                  style: const TextStyle(
-                    fontSize: 28,
-                    height: 1.2,
-                    color: azulOscuro,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    'Medio: ${alerta.tipo}',
-                    style: const TextStyle(
-                      fontSize: 15,
-                      color: azulOscuro,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  alerta.descripcion,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    height: 1.5,
-                    color: azulOscuro,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          _TituloSeccion(
-            icono: Icons.chat_bubble_outline_rounded,
-            titulo: 'Ejemplo de mensaje ficticio',
-          ),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: const Color(0xFFD8E4F0)),
-              boxShadow: [
-                BoxShadow(
-                  color: azulPrincipal.withValues(alpha: 0.05),
-                  blurRadius: 18,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: Text(
-              alerta.mensajeEjemplo,
-              style: const TextStyle(
-                fontSize: 19,
-                height: 1.6,
-                color: azulOscuro,
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'Este mensaje es inventado y se utiliza únicamente para aprender.',
-            style: TextStyle(
-              fontSize: 14,
-              color: Color(0xFF526579),
-              fontStyle: FontStyle.italic,
-            ),
-          ),
-          const SizedBox(height: 26),
-          _TituloSeccion(
-            icono: Icons.visibility_rounded,
-            titulo: 'Señales que debes reconocer',
-          ),
-          const SizedBox(height: 12),
-          for (final senal in alerta.senales)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Container(
-                padding: const EdgeInsets.all(15),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF4DF),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFEAD9A8)),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(
-                      Icons.warning_amber_rounded,
-                      color: Color(0xFFB7791F),
-                      size: 27,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        senal,
-                        style: const TextStyle(
-                          fontSize: 17,
-                          height: 1.4,
-                          color: azulOscuro,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          const SizedBox(height: 16),
-          _TituloSeccion(
-            icono: Icons.shield_rounded,
-            titulo: '¿Qué debes hacer?',
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.all(19),
-            decoration: BoxDecoration(
-              color: const Color(0xFFE2F5EF),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: const Color(0xFFBDE7D5)),
-            ),
+            color: Colors.white,
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 18),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(
-                  Icons.check_circle_rounded,
-                  color: verdePrincipal,
-                  size: 30,
-                ),
-                const SizedBox(width: 12),
+                if (_paso > 0)
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => _irAPaso(_paso - 1),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(52),
+                      ),
+                      child: const Text('Atrás', style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800)),
+                    ),
+                  ),
+                if (_paso > 0) const SizedBox(width: 10),
                 Expanded(
-                  child: Text(
-                    alerta.recomendacion,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      height: 1.5,
-                      color: azulOscuro,
+                  flex: 2,
+                  child: FilledButton(
+                    onPressed: () {
+                      if (_paso < 3) {
+                        _irAPaso(_paso + 1);
+                      } else {
+                        Navigator.of(context).pop();
+                      }
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: _paso < 3 ? colorBosque : colorArcilla,
+                      minimumSize: const Size.fromHeight(52),
+                    ),
+                    child: Text(
+                      _paso < 3 ? 'Siguiente' : 'Listo, volver al buzón',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
                     ),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 28),
-          SizedBox(
-            height: 58,
-            child: FilledButton.icon(
-              onPressed: () => Navigator.of(context).pop(),
-              icon: const Icon(Icons.arrow_back_rounded),
-              label: const Text(
-                'Volver a los ejemplos',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-              ),
-              style: FilledButton.styleFrom(
-                backgroundColor: azulPrincipal,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                minimumSize: const Size.fromHeight(58),
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
         ],
       ),
-    );
-  }
-}
-
-class _TituloSeccion extends StatelessWidget {
-  const _TituloSeccion({required this.icono, required this.titulo});
-
-  final IconData icono;
-  final String titulo;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: const Color(0xFFEAF3FF),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(icono, color: azulPrincipal, size: 24),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            titulo,
-            style: const TextStyle(
-              fontSize: 21,
-              fontWeight: FontWeight.w800,
-              color: azulOscuro,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
