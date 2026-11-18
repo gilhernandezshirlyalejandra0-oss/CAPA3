@@ -1,6 +1,5 @@
 import 'dart:math' as math;
 
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -10,6 +9,9 @@ import 'screens/aprende_phishing_screen.dart';
 import 'screens/consejos_seguridad_screen.dart';
 import 'screens/cuentos_screen.dart';
 import 'screens/cuestionario_screen.dart';
+import 'screens/inicio_screen.dart';
+import 'services/tamano_letra.dart';
+import 'widgets/fondo_inicio.dart';
 import 'services/voz_humana.dart';
 import 'theme/paleta.dart';
 import 'screens/bienvenida_screen.dart';
@@ -71,11 +73,18 @@ class EscudoMayorApp extends StatelessWidget {
           tertiary: Paleta.mostaza,
           surface: colorPapel,
         ),
-        appBarTheme: AppBarTheme(
-          titleTextStyle: Letras.titulo(size: 22),
-        ),
+        appBarTheme: AppBarTheme(titleTextStyle: Letras.titulo(size: 22)),
       ),
-      builder: (context, child) {
+      builder: (context, hijo) {
+        // Aplica el tamaño de letra elegido con los botones A− / A+.
+        final child = ValueListenableBuilder<double>(
+          valueListenable: TamanoLetra.escala,
+          builder: (context, escala, _) => MediaQuery(
+            data: MediaQuery.of(context)
+                .copyWith(textScaler: TextScaler.linear(escala)),
+            child: hijo!,
+          ),
+        );
         return LayoutBuilder(
           builder: (context, constraints) {
             if (constraints.maxWidth > 520) {
@@ -100,7 +109,7 @@ class EscudoMayorApp extends StatelessWidget {
                 ),
               );
             }
-            return child!;
+            return child;
           },
         );
       },
@@ -117,15 +126,23 @@ class ContenedorCuatroPantallas extends StatefulWidget {
 }
 
 class _ContenedorCuatroPantallasState extends State<ContenedorCuatroPantallas> {
-  int _indiceActual = 0;
+  /// -1 es la página de Inicio; 0 a 4 son las secciones de la barra de abajo.
+  int _indiceActual = -1;
 
-  final List<Widget> _pantallas = const [
-    AprendePhishingScreen(),
-    AlertasScreen(),
-    CuentosScreen(),
-    ConsejosSeguridadScreen(),
-    CuestionarioScreen(),
+  late final List<Widget> _pantallas = [
+    InicioScreen(onAbrir: _cambiarPantalla),
+    const AprendePhishingScreen(),
+    const AlertasScreen(),
+    const CuentosScreen(),
+    const ConsejosSeguridadScreen(),
+    const CuestionarioScreen(),
   ];
+
+  void _volverAlInicio() {
+    if (_indiceActual == -1) return;
+    setState(() => _indiceActual = -1);
+    VozHumana.narrar('Estás en el inicio. Elige qué quieres hacer.');
+  }
 
   static const List<_Destino> _destinos = [
     _Destino('Historias', Icons.auto_stories_rounded, Paleta.papaya),
@@ -150,38 +167,176 @@ class _ContenedorCuatroPantallasState extends State<ContenedorCuatroPantallas> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(
-        index: _indiceActual,
-        children: _pantallas,
-      ),
-      bottomNavigationBar: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const ReproductorVoz(),
-          Container(
-            padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: Paleta.ciruela, width: 3)),
-            ),
-            child: SafeArea(
-              top: false,
-              child: Row(
-                children: [
-                  for (var i = 0; i < _destinos.length; i++)
-                    Expanded(
-                      child: _BotonNavegacion(
-                        destino: _destinos[i],
-                        activo: i == _indiceActual,
-                        onTap: () => _cambiarPantalla(i),
-                      ),
-                    ),
-                ],
+    final enInicio = _indiceActual == -1;
+    return PopScope(
+      // El botón "atrás" del celular lleva al Inicio antes de salir.
+      canPop: enInicio,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _volverAlInicio();
+      },
+      child: Scaffold(
+        body: Stack(
+          children: [
+            // Fondo de pantalla completo, solo en el Inicio.
+            Positioned.fill(
+              child: AnimatedOpacity(
+                opacity: enInicio ? 1 : 0,
+                duration: const Duration(milliseconds: 400),
+                child: const FondoInicio(),
               ),
             ),
+            Column(
+              children: [
+                _FranjaSuperior(enInicio: enInicio, onInicio: _volverAlInicio),
+                Expanded(
+                  // La franja de arriba ya respeta la barra de estado del celular.
+                  child: MediaQuery.removePadding(
+                    context: context,
+                    removeTop: true,
+                    child: IndexedStack(
+                      index: _indiceActual + 1,
+                      children: _pantallas,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        bottomNavigationBar: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            MediaQuery.withNoTextScaling(child: const ReproductorVoz()),
+            // La barra de abajo mantiene su tamaño para que nunca se corte.
+            MediaQuery.withNoTextScaling(
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  border: Border(
+                    top: BorderSide(color: Paleta.ciruela, width: 3),
+                  ),
+                ),
+                child: SafeArea(
+                  top: false,
+                  child: Row(
+                    children: [
+                      for (var i = 0; i < _destinos.length; i++)
+                        Expanded(
+                          child: _BotonNavegacion(
+                            destino: _destinos[i],
+                            activo: i == _indiceActual,
+                            onTap: () => _cambiarPantalla(i),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Franja de arriba: botón para volver al Inicio y controles de letra.
+class _FranjaSuperior extends StatelessWidget {
+  const _FranjaSuperior({required this.enInicio, required this.onInicio});
+
+  final bool enInicio;
+  final VoidCallback onInicio;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: enInicio ? Colors.transparent : colorPapel,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+          child: Row(
+            children: [
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 250),
+                child: enInicio
+                    ? MediaQuery.withNoTextScaling(
+                        key: const ValueKey('logo'),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Paleta.aqua,
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Text(
+                            'ESCUDO MAYOR',
+                            style: Letras.titulo(
+                              size: 17,
+                              color: Colors.white,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        ),
+                      )
+                    : Semantics(
+                        key: const ValueKey('volver'),
+                        button: true,
+                        label: 'Volver al inicio',
+                        child: Material(
+                          color: Paleta.mostaza,
+                          borderRadius: BorderRadius.circular(30),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(30),
+                            onTap: onInicio,
+                            child: Container(
+                              padding: const EdgeInsets.fromLTRB(10, 7, 16, 7),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(30),
+                                border: Border.all(
+                                  color: Paleta.ciruela,
+                                  width: 2,
+                                ),
+                              ),
+                              child: MediaQuery.withNoTextScaling(
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.arrow_back_rounded,
+                                      color: Paleta.tinta,
+                                      size: 24,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    const Icon(
+                                      Icons.home_rounded,
+                                      color: Paleta.tinta,
+                                      size: 24,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Inicio',
+                                      style: Letras.titulo(
+                                        size: 18,
+                                        color: Paleta.tinta,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+              ),
+              const Spacer(),
+              const ControlLetra(),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }

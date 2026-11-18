@@ -28,3 +28,4 @@ flutter:
   # Ilustraciones de las historias (ver assets/escenas/LEEME.md)
   assets:
     - assets/escenas/
+    - assets/fondos/
