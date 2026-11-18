@@ -1,1 +1,0 @@
-"Pantallas de la app" 

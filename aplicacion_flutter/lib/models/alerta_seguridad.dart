@@ -19,3 +19,4 @@ class AlertaSeguridad {
   final List<String> senales;
   final String recomendacion;
 }
+ 
